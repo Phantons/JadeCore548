@@ -104,7 +104,9 @@ enum PaladinSpells
     PALADIN_SACRED_SHIELD_HOLY                   = 148039,
     PALADIN_T16_RETRIBUTION_2P                   = 144586,
     PALADIN_SPELL_WARRIOR_OF_THE_LIGHT           = 144587,
-    PALADIN_SPELL_HOLY_INSIGHT                   = 112859
+    PALADIN_SPELL_HOLY_INSIGHT                   = 112859,
+	PALADIN_T16_RETRIBUTION_4P					 = 144593,
+	PALADIN_SPELL_DIVINE_CRUSADER				 = 144595
 };
 
 // Called by Avenging Wrath - 31884
@@ -2167,6 +2169,35 @@ public:
 
 };
 
+class spell_pal_t16_retri_4p : public SpellScriptLoader
+{
+	public:
+		spell_pal_t16_retri_4p() : SpellScriptLoader("spell_pal_t16_retri_4p") { }
+
+		class spell_pal_t16_retri_4p_SpellScript : public SpellScript
+		{
+			PrepareSpellScript(spell_pal_t16_retri_4p_SpellScript);
+
+			void HandleOnHit()
+			{
+				if (Unit* caster = GetCaster())
+					if (caster->HasAura(PALADIN_T16_RETRIBUTION_4P))
+						if (roll_chance_i(25))
+							caster->CastSpell(caster, PALADIN_SPELL_DIVINE_CRUSADER, true);
+			}
+
+			void Register()
+			{
+				OnHit += SpellHitFn(spell_pal_t16_retri_4p_SpellScript::HandleOnHit);
+			}
+		};
+
+		SpellScript* GetSpellScript() const
+		{
+			return new spell_pal_t16_retri_4p_SpellScript();
+		}
+};
+
 void AddSC_paladin_spell_scripts()
 {
     new spell_paladin_holy_radiance();
@@ -2215,4 +2246,5 @@ void AddSC_paladin_spell_scripts()
     new spell_pal_selfless_healer_aura();
     new spell_pal_selfless_healer_spell();
     new spell_pal_beacon_of_light();
+	new spell_pal_t16_retri_4p();
 }

@@ -616,6 +616,7 @@ void LFGMgr::InitializeLockedDungeons(Player* player)
             locktype = LFG_LOCKSTATUS_ATTUNEMENT_TOO_LOW_LEVEL;
             locktype = LFG_LOCKSTATUS_ATTUNEMENT_TOO_HIGH_LEVEL;
         */
+		/*
         if (dungeon->type != TYPEID_RANDOM_DUNGEON)
         {
             if (dungeon->map > 0)
@@ -628,6 +629,7 @@ void LFGMgr::InitializeLockedDungeons(Player* player)
                 }
             }
         }
+		*/
         if (lockData.lockstatus != LFG_LOCKSTATUS_OK)
             lock[dungeon->Entry()] = lockData;
     }

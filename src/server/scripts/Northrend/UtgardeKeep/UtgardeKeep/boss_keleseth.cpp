@@ -87,7 +87,7 @@ public:
     {
         npc_frost_tombAI(Creature* creature) : ScriptedAI(creature)
         {
-            if (me->isSummon())
+            if (me->IsSummon())
                 if (Unit* summon = me->ToTempSummon()->GetSummoner())
                     DoCast(summon, SPELL_FROST_TOMB, true);
 

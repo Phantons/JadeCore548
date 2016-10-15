@@ -1018,7 +1018,7 @@ class spell_cultist_dark_martyrdom : public SpellScriptLoader
 
             void HandleEffect(SpellEffIndex /*effIndex*/)
             {
-                if (GetCaster()->isSummon())
+                if (GetCaster()->IsSummon())
                     if (Unit* owner = GetCaster()->ToTempSummon()->GetSummoner())
                         owner->GetAI()->SetGUID(GetCaster()->GetGUID(), GUID_CULTIST);
 

@@ -1283,8 +1283,8 @@ int WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
 
 
  
-
-    QueryResult premresulot = LoginDatabase.PQuery("SELECT gmlevelo FROM account WHERE id = %u", id);
+    // 160924. add condition - gmlevelo IS NOT NULL
+    QueryResult premresulot = LoginDatabase.PQuery("SELECT gmlevelo FROM account WHERE id = %u AND gmlevelo IS NOT NULL", id);
 
     if (premresulot)
     {

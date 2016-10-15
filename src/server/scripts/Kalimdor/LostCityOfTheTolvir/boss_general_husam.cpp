@@ -382,7 +382,7 @@ public:
             uiCheckTimer = 250;
             instance = creature->GetInstanceScript();
 
-            if (me->isSummon())
+            if (me->IsSummon())
                 if (Unit* summoner = me->ToTempSummon()->GetSummoner())
                 {
                     float x, y, _x, _y, z = me->GetPositionZ();

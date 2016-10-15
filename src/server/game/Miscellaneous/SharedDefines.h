@@ -705,7 +705,7 @@ enum SpellAttr8
     SPELL_ATTR8_ARMOR_SPECIALIZATION             = 0x00100000, // 20
     SPELL_ATTR8_UNK21                            = 0x00200000, // 21
     SPELL_ATTR8_UNK22                            = 0x00400000, // 22
-    SPELL_ATTR8_UNK23                            = 0x00800000, // 23
+	SPELL_ATTR8_BATTLE_RESURRECTION             = 0x00800000, // 23 Used to limit the Amount of Resurrections in Boss Encounters
     SPELL_ATTR8_HEALING_SPELL                    = 0x01000000, // 24
     SPELL_ATTR8_UNK25                            = 0x02000000, // 25
     SPELL_ATTR8_RAID_MARKER                      = 0x04000000, // 26 probably spell no need learn to cast
@@ -1516,20 +1516,45 @@ enum StealthType
 
 enum InvisibilityType
 {
-    INVISIBILITY_GENERAL     =  0,
-    INVISIBILITY_UNK1        =  1,
-    INVISIBILITY_UNK2        =  2,
-    INVISIBILITY_TRAP        =  3,
-    INVISIBILITY_UNK4        =  4,
-    INVISIBILITY_UNK5        =  5,
-    INVISIBILITY_DRUNK       =  6,
-    INVISIBILITY_UNK7        =  7,
-    INVISIBILITY_UNK8        =  8,
-    INVISIBILITY_UNK9        =  9,
-    INVISIBILITY_UNK10       = 10,
-    INVISIBILITY_UNK11       = 11,
+	INVISIBILITY_GENERAL = 0,
+	INVISIBILITY_UNK1 = 1,
+	INVISIBILITY_UNK2 = 2,
+	INVISIBILITY_TRAP = 3,
+	QUEST_INVIS_4 = 4,
+	QUEST_INVIS_5 = 5,
+	INVISIBILITY_DRUNK = 6,
+	QUEST_INVIS_7 = 7,
+	QUEST_INVIS_8 = 8,
+	QUEST_INVIS_9 = 9,
+	QUEST_INVIS_10 = 10,
+	QUEST_INVIS_11 = 11,
+	QUEST_INVIS_12 = 12,
+	QUEST_INVIS_13 = 13,
+	QUEST_INVIS_14 = 14,
+	QUEST_INVIS_15 = 15,
+	QUEST_INVIS_16 = 16,
+	QUEST_INVIS_17 = 17,
+	QUEST_INVIS_18 = 18,
+	QUEST_INVIS_19 = 19,
+	QUEST_INVIS_20 = 20,
+	QUEST_INVIS_21 = 21,
+	QUEST_INVIS_22 = 22,
+	QUEST_INVIS_23 = 23,
+	QUEST_INVIS_24 = 24,
+	QUEST_INVIS_25 = 25,
+	QUEST_INVIS_26 = 26,
+	QUEST_INVIS_27 = 27,
+	QUEST_INVIS_28 = 28,
+	QUEST_INVIS_29 = 29,
+	QUEST_INVIS_30 = 30,
+	QUEST_INVIS_31 = 31,
+	QUEST_INVIS_32 = 32,
+	QUEST_INVIS_33 = 33,
+	QUEST_INVIS_34 = 34,
+	QUEST_INVIS_35 = 35,
+	QUEST_INVIS_36 = 36,
 
-    TOTAL_INVISIBILITY_TYPES = 12
+	TOTAL_INVISIBILITY_TYPES = 37
 };
 
 enum ServerSideVisibilityType
@@ -1667,6 +1692,7 @@ enum SpellImmunity
 // TARGET_[OBJECT_TYPE]_[REFERENCE_TYPE(skipped for caster)]_[SELECTION_TYPE(skipped for default)]_[additional specifiers(friendly, BACK_LEFT, etc.]
 enum Targets
 {
+	TARGET_NONE                        = 0,
     TARGET_UNIT_CASTER                 = 1,
     TARGET_UNIT_NEARBY_ENEMY           = 2,
     TARGET_UNIT_NEARBY_PARTY           = 3,
@@ -2367,7 +2393,7 @@ enum Emote
     EMOTE_ONESHOT_SNIFF                          = 479,
     EMOTE_ONESHOT_DRAGONSTOMP                    = 480,
     EMOTE_ONESHOT_KNOCKDOWN                      = 482,
-    EMOTE_STATE_READ                             = 483,
+    // EMOTE_STATE_READ                             = 483,
     EMOTE_ONESHOT_FLYEMOTETALK                   = 485,
     EMOTE_STATE_READ_ALLOWMOVEMENT               = 492,
     EMOTE_STATE_CUSTOM_SPELL_06                  = 498,
@@ -4091,9 +4117,13 @@ enum SummonType
 
 enum EventId
 {
-    EVENT_SPELLCLICK        = 1001,
-    EVENT_CHARGE            = 1003,
-    EVENT_JUMP              = 1004
+	EVENT_SPELLCLICK       = 1001,
+	EVENT_CHARGE           = 1003,
+	EVENT_JUMP             = 1004,
+	/// Special charge event which is used for charge spells that have explicit targets
+	/// and had a path already generated - using it in PointMovementGenerator will not
+	/// create a new spline and launch it
+	EVENT_CHARGE_PREPATH   = 1005
 };
 
 enum ResponseCodes

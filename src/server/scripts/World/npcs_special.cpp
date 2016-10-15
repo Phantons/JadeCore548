@@ -1697,7 +1697,7 @@ class npc_snake_trap : public CreatureScript
                 me->SetStatFloatValue(UNIT_FIELD_RANGED_ATTACK_POWER, float(Info->attackpower));
 
                 // Start attacking attacker of owner on first ai update after spawn - move in line of sight may choose better target
-                if (!me->getVictim() && me->isSummon())
+                if (!me->getVictim() && me->IsSummon())
                     if (Unit* Owner = me->ToTempSummon()->GetSummoner())
                         if (Owner->getAttackerForHelper())
                             AttackStart(Owner->getAttackerForHelper());
@@ -2551,7 +2551,7 @@ class npc_wormhole : public CreatureScript
 
         bool OnGossipHello(Player* player, Creature* creature)
         {
-            if (creature->isSummon())
+            if (creature->IsSummon())
             {
                 if (player == creature->ToTempSummon()->GetSummoner())
                 {
@@ -5317,7 +5317,7 @@ class npc_shadowfiend : public CreatureScript
 
             void JustDied(Unit* /*killer*/)
             {
-                if (me->isSummon())
+                if (me->IsSummon())
                     if (Unit* owner = me->ToTempSummon()->GetSummoner())
                         if (owner->HasAura(GLYPH_OF_SHADOWFIEND))
                             owner->CastSpell(owner, GLYPH_OF_SHADOWFIEND_MANA, true);

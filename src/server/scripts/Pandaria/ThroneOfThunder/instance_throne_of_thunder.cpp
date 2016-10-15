@@ -67,7 +67,7 @@ class instance_throne_of_thunder : public InstanceMapScript
                 switch (creature->GetEntry())
                 {
                     case 694655:
-                    case BOSS_JINROKH:
+                    case BOSS_JINROKH_BREAKER:
                         jinrokhguid = creature->GetGUID();
                         break;
                     case 684766:
@@ -117,7 +117,7 @@ class instance_throne_of_thunder : public InstanceMapScript
 
                 switch (creature->GetEntry())
                 {
-                    case BOSS_JINROKH:
+                    case BOSS_JINROKH_BREAKER:
                         if (GameObject* JinrokhHorridonDoor = instance->GetGameObject(Pinstance->GetData64(DATA_JINROKH_HORRIDON_DOOR)))
                         {
                             if (GameObject* JinrokhDoor = instance->GetGameObject(Pinstance->GetData64(DATA_JINROKH_DOOR)))
@@ -162,10 +162,10 @@ class instance_throne_of_thunder : public InstanceMapScript
 				    case OBJECT_AMANI_DOOR:
 					    horridonDoorsGuid[3] = go->GetGUID();
 					    break;
-                    case OBJECT_JINROKH_ENTRANCE:
+                    case GO_JIN_ROKH_FRONT_DOOR:
                         jinrokhentrance = go->GetGUID();
                         break;
-                    case OBJECT_JINROKH_HORRIDON:
+                    case GO_JIN_ROKH_BACK_DOOR:
                         jinrokhhorridon = go->GetGUID();
                         break;
                     case OBJECT_HORRIDON_ENTRACE:
@@ -186,10 +186,10 @@ class instance_throne_of_thunder : public InstanceMapScript
             {
                 switch (type)
                 {
-                    case DATA_JINKORH:
+                    case DATA_JIN_ROKH_BREAKER_EVENT:
                         return jinrokhguid;
                         break;
-				    case DATA_HORRIDON:
+				    case DATA_HORRIDON_EVENT:
 					    return horridonGuid;
                         break;
                     case DATA_JINROKH_DOOR:

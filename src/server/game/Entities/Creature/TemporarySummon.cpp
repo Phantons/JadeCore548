@@ -225,7 +225,7 @@ void TempSummon::InitStats(uint32 duration)
             if (owner->m_SummonSlot[slot] && owner->m_SummonSlot[slot] != GetGUID())
             {
                 Creature* oldSummon = GetMap()->GetCreature(owner->m_SummonSlot[slot]);
-                if (oldSummon && oldSummon->isSummon())
+                if (oldSummon && oldSummon->IsSummon())
                     oldSummon->ToTempSummon()->UnSummon();
             }
             owner->m_SummonSlot[slot] = GetGUID();

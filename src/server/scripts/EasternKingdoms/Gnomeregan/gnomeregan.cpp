@@ -566,7 +566,7 @@ public:
 
         void SetDataSummoner()
         {
-            if (!me->isSummon())
+            if (!me->IsSummon())
                 return;
 
             if (Unit* summon = me->ToTempSummon()->GetSummoner())
@@ -583,7 +583,7 @@ public:
 
         void JustDied(Unit* /*killer*/)
         {
-            if (!me->isSummon())
+            if (!me->IsSummon())
                 return;
 
             if (Unit* summoner = me->ToTempSummon()->GetSummoner())

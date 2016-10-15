@@ -1,70 +1,101 @@
-Opcodes TODO(все есть в опкодах для 540):
+﻿Mists of Pandaria Instance Scripts TODO:
 
-Spell system:
+1) Mogu'shan Vaults:
+    - Need to rewrite instance script
 
-CMSG_CANCEL_AUTO_REPEAT_SPELL
+2) Heart of Fear:
+    - Need to rewrite instance script
+    - Need to rewrite Imperial Vizier Zor'lok
+    - Need to rewire Blade Lord Ta'yak
+    - Need to rewrite Garalon
+    - Need to rewrite Wind Lord Mel'jarak
+    - Need to add script for Amber-Shaper Un'sok
+    - Need to rewrite Grand Empress Shek'zeer
 
-PvP/BG/Arena:
+3) Terrace of Endless Spring:
+    - Need to rewrite instance script
+    - Need to fix some achievements
+    - Need to fix Sha of Fear heroic mode
 
-CMSG_MESSAGECHAT_BATTLEGROUND
+4) Throne of Thunder:
+    - Need to rewrite instance script
+    - Need to rewrite Council of Elders
+    - Need to rewrite Tortos
+    - Need to rewrite Megaera
+    - Need to rewrite Durumu the Forgotten
+    - Need to rewrite Primordius
+    - Need to rewrite Dark Animus
+    - Need to add script for Iron Qon
+    - Need to add script for Twin Consorts
+    - Need to add script for Lei Shen the Thunder King
+    - Need to add script for Ra-den
 
-LFG:
+5) Siege of Orgrimmar:
+    - Need to rewrite Immerseus
+    - Need to rewrite Norushen
+    - Need to finish Galakras script
+    - Need to finish Iron Juggernaut script
+    - Need to add script for Malkorok
+    - Need to add script for Spoils of Pandaria
+    - Need to add script for Thok the Bloodthirsty
+    - Need to add script for Siegecrafter Blakcfuse
+    - Need to add script for Paragons of the Klaxxi 
 
-CMSG_LFG_SET_BOOT_VOTE
-CMSG_LFG_SET_ROLES
+6) Mists of Pandaria dungeons:
+    - Need to rewrite all of them
 
-Chat:
+	
+Mists of Pandaria SmartAI Scripts TODO:
 
-CMSG_MESSAGECHAT_ADDON_BATTLEGROUND
-CMSG_MESSAGECHAT_ADDON_GUILD
-CMSG_MESSAGECHAT_ADDON_OFFICER
-CMSG_MESSAGECHAT_ADDON_PARTY
-CMSG_MESSAGECHAT_ADDON_RAID
-CMSG_MESSAGECHAT_ADDON_WHISPER
+Pandaria Zones:
 
-Item:
+-- Dread Wastes
+-- Isle of Giants
+-- Isle of Thunder
+-- Krasarang Wilds
+-- Kun-Lai Summit
+-- The Jade Forest
+-- The Veiled Stair
+-- Timeless Isle
+-- Townlong Steppes
+-- Vale of Eternal Blossoms
+-- Valley of the Four Winds
 
-CMSG_CANCEL_TEMP_ENCHANTMENT
-SMSG_ENCHANTMENT_LOG
-SMSG_ITEM_COOLDOWN
-SMSG_READ_ITEM_FAILED
+Pandaria Dungeons:
 
-Loot:
+-- Gate of the Setting Sun
+-- Mogu'shan Palace
+-- Scarlet Halls
+-- Scarlet Monastery
+-- Scholomance
+-- Shado-Pan Monastery
+-- Siege of Niuzao Temple
+-- Stormstout Brewery
+-- Temple of the Jade Serpent
 
-SMSG_LOOT_LIST
-CMSG_LOOT_MASTER_GIVE
-CMSG_OPT_OUT_OF_LOOT
+Pandaria Raids:
 
-Inspect:
+-- Heart of Fear
+-- Mogu'shan Vaults
+-- Siege of Orgrimmar
+-- Terrace of Endless Spring
+-- Throne of Thunder
 
-CMSG_REQUEST_INSPECT_RATED_BG_STATS
+The Maelstrom Zones:
 
-Group/Raid/Instance:
+-- The Lost Isles
+-- The Wandering Isle
 
-SMSG_GROUP_UNINVITE
+Mists of Pandaria Start Zones Quests ( 1-5 lvl ) TODO:
 
-Guild:
-
-SMSG_GUILD_CHALLENGE_COMPLETED // 6672 не найден в снифах, нужно проверить структуру
-
-
-Achievement:
-
-CMSG_SHOW_ACCOUNT_ACHIEVEMENT
-SMSG_CRITERIA_DELETED
-
-Currency:
-
-SMSG_UPDATE_CURRENCY_WEEK_LIMIT
-CMSG_SET_CURRENCY_FLAGS
-
-Misc:
-
-SMSG_CHAR_FACTION_OR_RACE_CHANGE
-SMSG_TOGGLE_XP_GAIN
-
-
---
-После создания персонажа не видно только что созданного персонажа. Почему-то он сохраняется в базу дольше, чем должен. Такая же проблема может быть с ренеймом и т.д.
-Какие-то проблемы с достижениями за завершенные квесты
-если сесть на трофейный чоппер из ульдуара и использовать заклинание "мазут", то будет краш клиента. Фейлит spell_go для ауры(!) от триггера. Без чоппера спелл работает верно.
+-- Dwarf
+-- Undead
+-- Night Elf
+-- Tauren
+-- Gnome
+-- Troll
+-- Draenei
+-- Blood Elf
+-- Worgen
+-- Goblin
+-- Pandaren

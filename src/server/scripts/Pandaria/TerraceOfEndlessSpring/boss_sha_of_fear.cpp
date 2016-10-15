@@ -1187,7 +1187,7 @@ public:
         EventMap events;
 
         int32 stackstobreak;
-        int32 timertodespawn;
+        uint32 timertodespawn;
 
         void Init()
         {

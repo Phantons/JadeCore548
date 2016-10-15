@@ -67,7 +67,8 @@ MySQLConnection::~MySQLConnection()
         free((void *)m_queries[itr->first].first);
 
     mysql_close(m_Mysql);
-    delete m_Mysql;
+    /* Heap Corruption Exception 0xC0000374.
+	delete m_Mysql; */
     m_Mysql = NULL;
 }
 

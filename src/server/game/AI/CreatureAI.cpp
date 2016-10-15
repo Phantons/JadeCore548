@@ -62,7 +62,7 @@ void CreatureAI::DoZoneInCombat(Creature* creature /*= NULL*/, float maxRangeToN
     {
         if (Unit* nearTarget = creature->SelectNearestTarget(maxRangeToNearestTarget))
             creature->AI()->AttackStart(nearTarget);
-        else if (creature->isSummon())
+        else if (creature->IsSummon())
         {
             if (Unit* summoner = creature->ToTempSummon()->GetSummoner())
             {

@@ -1620,12 +1620,6 @@ public:
 
             events.Update(diff);
 
-            switch (events.ExecuteEvent())
-            {
-            default:
-                break;
-            }
-
             DoMeleeAttackIfReady();
         }
     };

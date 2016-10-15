@@ -330,7 +330,7 @@ int Master::Run()
     sLog->outInfo(LOG_FILTER_WORLDSERVER, " __  / / __ `/ __  / _ \\/ /   / __ \\/ ___/ _ \\");
     sLog->outInfo(LOG_FILTER_WORLDSERVER, "/ /_/ / /_/ / /_/ /  __/ /___/ /_/ / /  /  __/");
     sLog->outInfo(LOG_FILTER_WORLDSERVER, "\\____/\\__,_/\\__,_/\\___/\\____/\\____/_/   \\___/");
-    sLog->outInfo(LOG_FILTER_WORLDSERVER, "http://www.pandashan.com\n");
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, "                                                    ");
 
     /// worldserver PID file creation
     std::string pidfile = ConfigMgr::GetStringDefault("PidFile", "");

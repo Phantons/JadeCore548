@@ -4389,7 +4389,7 @@ void Spell::EffectSummonType(SpellEffIndex effIndex)
                 for (std::list<Creature*>::iterator i = tempList.begin(); i != tempList.end(); ++i)
                 {
                     Unit* owner = (*i)->GetOwner();
-                    if (owner && owner == m_caster && (*i)->isSummon())
+                    if (owner && owner == m_caster && (*i)->IsSummon())
                         continue;
 
                     gatewayList.remove((*i));
@@ -4416,7 +4416,7 @@ void Spell::EffectSummonType(SpellEffIndex effIndex)
                 for (std::list<Creature*>::iterator i = tempList.begin(); i != tempList.end(); ++i)
                 {
                     Unit* owner = (*i)->GetOwner();
-                    if (owner && owner == m_caster && (*i)->isSummon())
+                    if (owner && owner == m_caster && (*i)->IsSummon())
                         continue;
 
                     gatewayList.remove((*i));
@@ -4573,7 +4573,7 @@ void Spell::EffectSummonType(SpellEffIndex effIndex)
                         if (m_caster->m_SummonSlot[slot] && m_caster->m_SummonSlot[slot] != summon->GetGUID())
                         {
                             Creature* oldSummon = m_caster->GetMap()->GetCreature(m_caster->m_SummonSlot[slot]);
-                            if (oldSummon && oldSummon->isSummon())
+                            if (oldSummon && oldSummon->IsSummon())
                                 oldSummon->ToTempSummon()->UnSummon();
                         }
                         m_caster->m_SummonSlot[slot] = summon->GetGUID();
@@ -6612,7 +6612,7 @@ void Spell::EffectScriptEffect(SpellEffIndex effIndex)
         }
         case 52173: // Coyote Spirit Despawn
         case 60243: // Blood Parrot Despawn
-            if (unitTarget->GetTypeId() == TYPEID_UNIT && unitTarget->ToCreature()->isSummon())
+            if (unitTarget->GetTypeId() == TYPEID_UNIT && unitTarget->ToCreature()->IsSummon())
                 unitTarget->ToTempSummon()->UnSummon();
             return;
         case 52479: // Gift of the Harvester

@@ -155,6 +155,8 @@ class ThreatContainer
         // Sort the list if necessary
         void update();
     public:
+       typedef std::list<HostileReference*> StorageType;
+
         ThreatContainer() { iDirty = false; }
         ~ThreatContainer() { clearReferences(); }
 

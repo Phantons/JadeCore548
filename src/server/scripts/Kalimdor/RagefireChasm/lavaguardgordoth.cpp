@@ -89,7 +89,7 @@ public:
 			{
 				Talk(TALK_INTRO);
 				intro = true;
-				me->GetMotionMaster()->MoveJump(-369.5, 166.21, -18.52, 5, 5, 1.312);
+				me->GetMotionMaster()->MoveJump(-369.5f, 166.21f, -18.52f, 5.0f, 5, 1.312f);
 				DoCastVictim(120024);
 			}
 		}

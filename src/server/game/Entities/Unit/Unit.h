@@ -973,6 +973,28 @@ struct SpellPeriodicAuraLogInfo
 
 uint32 createProcExtendMask(SpellNonMeleeDamage* damageInfo, SpellMissInfo missCondition);
 
+struct RedirectThreatInfo
+{
+	RedirectThreatInfo() : _targetGUID(0), _threatPct(0) { }
+	uint64 _targetGUID;
+	uint32 _threatPct;
+
+	uint64 GetTargetGUID() const { return _targetGUID; }
+	uint32 GetThreatPct() const { return _threatPct; }
+
+	void Set(uint64 guid, uint32 pct)
+	{
+		_targetGUID = guid;
+		_threatPct = pct;
+	}
+
+	void ModifyThreatPct(int32 amount)
+	{
+		amount += _threatPct;
+		_threatPct = uint32(std::max(0, amount));
+	}
+};
+
 #define MAX_DECLINED_NAME_CASES 5
 
 struct DeclinedName
@@ -1335,7 +1357,7 @@ class Unit : public WorldObject
 
         uint32 HasUnitTypeMask(uint32 mask) const { return mask & m_unitTypeMask; }
         void AddUnitTypeMask(uint32 mask) { m_unitTypeMask |= mask; }
-        bool isSummon() const   { return m_unitTypeMask & UNIT_MASK_SUMMON; }
+        bool IsSummon() const   { return m_unitTypeMask & UNIT_MASK_SUMMON; }
         bool isGuardian() const { return m_unitTypeMask & UNIT_MASK_GUARDIAN; }
         bool isPet() const      { return m_unitTypeMask & UNIT_MASK_PET; }
         bool isHunterPet() const{ return m_unitTypeMask & UNIT_MASK_HUNTER_PET; }
@@ -1452,7 +1474,7 @@ class Unit : public WorldObject
         uint8 getStandState() const { return GetByteValue(UNIT_FIELD_BYTES_1, 0); }
         bool IsSitState() const;
         bool IsStandState() const;
-        void SetStandState(uint8 state);
+        void SetStandState(uint16 state);
 
         void  SetStandFlags(uint8 flags) { SetByteFlag(UNIT_FIELD_BYTES_1, 2, flags); }
         void  RemoveStandFlags(uint8 flags) { RemoveByteFlag(UNIT_FIELD_BYTES_1, 2, flags); }
@@ -1484,7 +1506,14 @@ class Unit : public WorldObject
         void TriggerAurasProcOnEvent(std::list<AuraApplication*>* myProcAuras, std::list<AuraApplication*>* targetProcAuras, Unit* actionTarget, uint32 typeMaskActor, uint32 typeMaskActionTarget, uint32 spellTypeMask, uint32 spellPhaseMask, uint32 hitMask, Spell* spell, DamageInfo* damageInfo, HealInfo* healInfo);
         void TriggerAurasProcOnEvent(ProcEventInfo& eventInfo, std::list<AuraApplication*>& procAuras);
 
-        void HandleEmoteCommand(uint32 anim_id);
+		void HandleEmoteCommand(uint32 anim_id);
+		void HandleEmote(uint32 emote_id);
+		void HandleEmoteState(uint32 emote_id);
+		uint32 GetEmoteState() { return GetUInt32Value(UNIT_NPC_EMOTESTATE); }
+		void SetStoredEmoteState(uint32 emoteState) { m_oldEmoteState = emoteState; }
+		uint32 GetStoredEmoteState() { return m_oldEmoteState; }
+		void ClearEmotes();
+
         void AttackerStateUpdate (Unit* victim, WeaponAttackType attType = BASE_ATTACK, bool extra = false);
 
         void CalculateMeleeDamage(Unit* victim, uint32 damage, CalcDamageInfo* damageInfo, WeaponAttackType attackType = BASE_ATTACK);
@@ -2228,6 +2257,13 @@ class Unit : public WorldObject
         uint32 GetModelForForm(ShapeshiftForm form);
         uint32 GetModelForTotem(PlayerTotemType totemType);
 
+		// Redirect Threat
+		void SetRedirectThreat(uint64 guid, uint32 pct) { _redirectThreadInfo.Set(guid, pct); }
+		void ResetRedirectThreat() { SetRedirectThreat(0, 0); }
+		void ModifyRedirectThreat(int32 amount) { _redirectThreadInfo.ModifyThreatPct(amount); }
+		uint32 GetRedirectThreatPercent() const { return _redirectThreadInfo.GetThreatPct(); }
+		Unit* GetRedirectThreatTarget();
+
         void SetReducedThreatPercent(uint32 pct, uint64 guid)
         {
             m_reducedThreatPercent = pct;
@@ -2289,8 +2325,8 @@ class Unit : public WorldObject
         Totem* ToTotem() { if (isTotem()) return reinterpret_cast<Totem*>(this); else return NULL; }
         Totem const* ToTotem() const { if (isTotem()) return reinterpret_cast<Totem const*>(this); else return NULL; }
 
-        TempSummon* ToTempSummon() { if (isSummon()) return reinterpret_cast<TempSummon*>(this); else return NULL; }
-        TempSummon const* ToTempSummon() const { if (isSummon()) return reinterpret_cast<TempSummon const*>(this); else return NULL; }
+        TempSummon* ToTempSummon() { if (IsSummon()) return reinterpret_cast<TempSummon*>(this); else return NULL; }
+        TempSummon const* ToTempSummon() const { if (IsSummon()) return reinterpret_cast<TempSummon const*>(this); else return NULL; }
 
         void SetTarget(uint64 guid)
         {
@@ -2433,6 +2469,8 @@ class Unit : public WorldObject
 
         uint32 m_SendTransportMoveTimer;
 
+		uint32 m_oldEmoteState; // Used to store and restore old emote states for creatures.
+
         uint32 m_lastRegenTime[MAX_POWERS];
         uint32 m_powers[MAX_POWERS];
     private:
@@ -2490,6 +2528,8 @@ class Unit : public WorldObject
 
         uint32 m_reducedThreatPercent;
         uint64 m_misdirectionTargetGUID;
+
+		RedirectThreatInfo _redirectThreadInfo;
 
         bool m_cleanupDone; // lock made to not add stuff after cleanup before delete
         bool m_duringRemoveFromWorld; // lock made to not add stuff after beginning removing from world

@@ -100,25 +100,25 @@ public:
 
 				case EVENT_CHANGE_POSITION1:
 				{
-					me->NearTeleportTo(-259.88, 137.62, -19.17, 0.6);
+					me->NearTeleportTo(-259.88f, 137.62f, -19.17f, 0.6f);
 					events.ScheduleEvent(EVENT_CHANGE_POSITION2, 9000);
 					break;
 				}
 				case EVENT_CHANGE_POSITION2:
 				{
-					me->NearTeleportTo(-229.58, 134.22, -19.17, 2.3);
+					me->NearTeleportTo(-229.58f, 134.22f, -19.17f, 2.3f);
 					events.ScheduleEvent(EVENT_CHANGE_POSITION3, 9000);
 					break;
 				}
 				case EVENT_CHANGE_POSITION3:
 				{
-					me->NearTeleportTo(-226.34, 166, -19.71, 3.54);
+					me->NearTeleportTo(-226.34f, 166.0f, -19.71f, 3.54f);
 					events.ScheduleEvent(EVENT_CHANGE_POSITION4, 9000);
 					break;
 				}
 				case EVENT_CHANGE_POSITION4:
 				{
-					me->NearTeleportTo(-258.17, 172.41,-19.63, 5.58);
+					me->NearTeleportTo(-258.17f, 172.41f,-19.63f, 5.58f);
 					events.ScheduleEvent(EVENT_CHANGE_POSITION1, 9000);
 					break;
 				}

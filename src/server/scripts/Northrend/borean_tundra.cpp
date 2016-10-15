@@ -602,7 +602,7 @@ public:
                 go_caribou->SetLootState(GO_JUST_DEACTIVATED);
 
             if (TempSummon* summon = me->ToTempSummon())
-                if (summon->isSummon())
+                if (summon->IsSummon())
                     if (Unit* temp = summon->GetSummoner())
                         if (temp->GetTypeId() == TYPEID_PLAYER)
                             CAST_PLR(temp)->KilledMonsterCredit(me->GetEntry(), 0);
@@ -1309,7 +1309,7 @@ public:
             if (uiType != POINT_MOTION_TYPE)
                 return;
 
-            if (me->isSummon())
+            if (me->IsSummon())
                 if (Unit* summoner = me->ToTempSummon()->GetSummoner())
                     CAST_AI(npc_thassarian::npc_thassarianAI, CAST_CRE(summoner)->AI())->bArthasInPosition = true;
         }
@@ -1341,7 +1341,7 @@ public:
 
             me->AddUnitState(UNIT_STATE_STUNNED);
             me->CastSpell(me, SPELL_STUN, true);
-            if (me->isSummon())
+            if (me->IsSummon())
                 if (Unit* summoner = me->ToTempSummon()->GetSummoner())
                     CAST_AI(npc_thassarian::npc_thassarianAI, CAST_CRE(summoner)->AI())->bArlosInPosition = true;
         }
@@ -1398,7 +1398,7 @@ public:
             if (uiType != POINT_MOTION_TYPE)
                 return;
 
-            if (me->isSummon())
+            if (me->IsSummon())
                 if (Unit* summoner = me->ToTempSummon()->GetSummoner())
                     CAST_AI(npc_thassarian::npc_thassarianAI, CAST_CRE(summoner)->AI())->bTalbotInPosition = true;
         }
@@ -1515,7 +1515,7 @@ public:
                 me->AddUnitState(UNIT_STATE_STUNNED);
                 me->CastSpell(me, SPELL_STUN, true);
 
-                if (me->isSummon())
+                if (me->IsSummon())
                     if (Unit* summoner = me->ToTempSummon()->GetSummoner())
                         CAST_AI(npc_thassarian::npc_thassarianAI, summoner->GetAI())->bLeryssaInPosition = true;
                 bDone = true;
@@ -1523,7 +1523,7 @@ public:
             else
             {
                 me->SetStandState(UNIT_STAND_STATE_SIT);
-                if (me->isSummon())
+                if (me->IsSummon())
                     if (Unit* summoner = me->ToTempSummon()->GetSummoner())
                     summoner->SetStandState(UNIT_STAND_STATE_SIT);
                 uiPhaseTimer = 1500;
@@ -1540,7 +1540,7 @@ public:
                 switch (Phase)
                 {
                     case 1:
-                        if (me->isSummon())
+                        if (me->IsSummon())
                             if (Unit* pThassarian = me->ToTempSummon()->GetSummoner())
                                 DoScriptText(SAY_THASSARIAN_4, pThassarian);
                         uiPhaseTimer = 5000;
@@ -1552,7 +1552,7 @@ public:
                         ++Phase;
                         break;
                     case 3:
-                        if (me->isSummon())
+                        if (me->IsSummon())
                             if (Unit* pThassarian = me->ToTempSummon()->GetSummoner())
                                 DoScriptText(SAY_THASSARIAN_5, pThassarian);
                         uiPhaseTimer = 5000;
@@ -1564,7 +1564,7 @@ public:
                         ++Phase;
                         break;
                     case 5:
-                        if (me->isSummon())
+                        if (me->IsSummon())
                             if (Unit* pThassarian = me->ToTempSummon()->GetSummoner())
                         DoScriptText(SAY_THASSARIAN_6, pThassarian);
                         uiPhaseTimer = 5000;
@@ -1577,7 +1577,7 @@ public:
                         ++Phase;
                         break;
                     case 7:
-                        if (me->isSummon())
+                        if (me->IsSummon())
                             if (Unit* pThassarian = me->ToTempSummon()->GetSummoner())
                             {
                                 DoScriptText(SAY_THASSARIAN_7, pThassarian);
