@@ -353,7 +353,7 @@ public:
         {
             me->SetObjectScale(1.0f);
         }
-        int32 visual;
+        uint32 visual;
         void Reset()
         {
             visual = 5000;
@@ -523,7 +523,7 @@ public:
             me->setFaction(16);
         }
 
-        int32 GustTimer;
+        uint32 GustTimer;
 
         void Reset()
         {
@@ -590,7 +590,7 @@ public:
             me->setFaction(16);
         }
 
-        int32 ZephyrCast;
+        uint32 ZephyrCast;
 
         void Reset()
         {

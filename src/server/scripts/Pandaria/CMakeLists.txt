@@ -76,11 +76,11 @@ Pandaria/HeartOfFear/heart_of_fear.cpp
   Pandaria/SiegeNiuzaoTemple/boss_wing_leader.cpp
   
   Pandaria/TerraceOfEndlessSpring/instance_terrace_of_endless_spring.cpp
-Pandaria/TerraceOfEndlessSpring/terrace_of_endless_spring.cpp
-Pandaria/TerraceOfEndlessSpring/terrace_of_endless_spring.h
-Pandaria/TerraceOfEndlessSpring/boss_protectors_of_the_endless.cpp
-Pandaria/TerraceOfEndlessSpring/boss_lei_shi.cpp
-Pandaria/TerraceOfEndlessSpring/boss_tsulong.cpp
+  Pandaria/TerraceOfEndlessSpring/terrace_of_endless_spring.cpp
+  Pandaria/TerraceOfEndlessSpring/terrace_of_endless_spring.h
+  Pandaria/TerraceOfEndlessSpring/boss_protectors_of_the_endless.cpp
+  Pandaria/TerraceOfEndlessSpring/boss_lei_shi.cpp
+  Pandaria/TerraceOfEndlessSpring/boss_tsulong.cpp
 
   Pandaria/TerraceOfEndlessSpring/boss_sha_of_fear.cpp
 
@@ -105,17 +105,31 @@ Pandaria/TerraceOfEndlessSpring/boss_tsulong.cpp
   Pandaria/ThroneOfThunder/boss_jinrokh.cpp
   Pandaria/ThroneOfThunder/boss_megaera.cpp
   Pandaria/ThroneOfThunder/boss_ji_kun.cpp
+  Pandaria/ThroneOfThunder/boss_durumu.cpp
   Pandaria/ThroneOfThunder/throne_of_thunder.cpp 
   
   Pandaria/SiegeOfOrgrimmar/siege_of_orgrimmar.h
   Pandaria/SiegeOfOrgrimmar/siege_of_orgrimmar.cpp
   Pandaria/SiegeOfOrgrimmar/instance_siege_of_orgrimmar.cpp
   Pandaria/SiegeOfOrgrimmar/boss_immersius.cpp
-  Pandaria/SiegeOfOrgrimmar/boss_fallen_protectors.cpp
+  Pandaria/SiegeOfOrgrimmar/boss_fallen_protectors.cpp	
+  Pandaria/SiegeOfOrgrimmar/boss_norushen.cpp
   Pandaria/SiegeOfOrgrimmar/boss_sha_of_pride.cpp
+  Pandaria/SiegeOfOrgrimmar/boss_galakras.cpp
+  Pandaria/SiegeOfOrgrimmar/boss_iron_juggernaut.cpp
+  Pandaria/SiegeOfOrgrimmar/boss_dark_shaman.cpp
+  Pandaria/SiegeOfOrgrimmar/boss_general_nazgrim.cpp
+  Pandaria/SiegeOfOrgrimmar/boss_malkorok.cpp
+  Pandaria/SiegeOfOrgrimmar/boss_spoils_of_pandaria.cpp
+  Pandaria/SiegeOfOrgrimmar/boss_thok_the_bloodthirsty.cpp
+  Pandaria/SiegeOfOrgrimmar/boss_siegecrafter_blackfuse.cpp
+  Pandaria/SiegeOfOrgrimmar/boss_paragons_of_the_klaxxi.cpp
   Pandaria/SiegeOfOrgrimmar/boss_garrosh_hellscream.cpp
   Pandaria/SiegeOfOrgrimmar/boss_garrosh_hellscream.h	
-  Pandaria/SiegeOfOrgrimmar/boss_norushen.cpp
+  
+  Pandaria/TimelessIsle/timeless_isle.cpp
+  Pandaria/TimelessIsle/timeless_isle.h
+  Pandaria/TimelessIsle/zone_timeless_isle.cpp
 
 
 )

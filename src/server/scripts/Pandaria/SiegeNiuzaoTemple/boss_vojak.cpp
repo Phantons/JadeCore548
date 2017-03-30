@@ -2065,10 +2065,10 @@ public:
 
 			while (uint32 eventId = events.ExecuteEvent())
 			{
-				switch (eventId)
-				{
+				//switch (eventId)
+				//{
 
-				}
+				//}
 			}
 		}
 	private:
@@ -2109,9 +2109,9 @@ public:
 
 			while (uint32 eventId = events.ExecuteEvent())
 			{
-				switch (eventId)
-				{
-				}
+				//switch (eventId)
+				//{
+				//}
 			}
 		}
 	private:
@@ -2298,9 +2298,9 @@ public:
 
 			while (uint32 eventId = events.ExecuteEvent())
 			{
-				switch (eventId)
-				{
-				}
+				//switch (eventId)
+				//{
+				//}
 			}
 		}
 	private:

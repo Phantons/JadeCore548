@@ -805,12 +805,12 @@ public:
             me->setFaction(35);
         }
 
-        int32 BossHasSpokedTimer_1;
-        int32 BossHasSpokedTimer_2;
-        int32 BossHasSpokedTimer_3;
-        int32 BossHasSpokedTimer_4;
-        int32 BossHasSpokedTimer_5;
-        int32 BossHasSpokedTimer_6;
+        uint32 BossHasSpokedTimer_1;
+        uint32 BossHasSpokedTimer_2;
+        uint32 BossHasSpokedTimer_3;
+        uint32 BossHasSpokedTimer_4;
+        uint32 BossHasSpokedTimer_5;
+        uint32 BossHasSpokedTimer_6;
 
         bool BossHasSpoked1;
         bool BossHasSpoked2;
@@ -930,10 +930,10 @@ public:
             me->setFaction(35);
         }
 
-        int32 BossHasSpokedTimer_1;
-        int32 BossHasSpokedTimer_2;
-        int32 BossHasSpokedTimer_3;
-        int32 BossHasSpokedTimer_4;
+        uint32 BossHasSpokedTimer_1;
+        uint32 BossHasSpokedTimer_2;
+        uint32 BossHasSpokedTimer_3;
+        uint32 BossHasSpokedTimer_4;
 
         bool BossHasSpoked1;
         bool BossHasSpoked2;

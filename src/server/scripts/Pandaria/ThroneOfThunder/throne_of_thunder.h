@@ -27,8 +27,8 @@
 
 enum eData
 {
-    DATA_JINKORH,
-    DATA_HORRIDON,
+    DATA_JIN_ROKH_BREAKER_EVENT			= 0,
+    DATA_HORRIDON_EVENT					= 1,
 
     DATA_FARA_DOOR,
     DATA_GURU_DOOR,
@@ -51,14 +51,15 @@ enum eData
 
     DATA_TORTOS,
     DATA_MEGAERA,
-    DATA_DURUMU,
+    DATA_DURUMU_THE_FORGOTTEN,
 };
 enum eActions
 { //617299803
 };
 enum eCreatures
 {
-    BOSS_JINROKH = 69465,
+    BOSS_JINROKH_BREAKER = 69465,
+    NPC_JINROKH_STATUE = 69467,
     BOSS_HORRIDON = 68476,
 
     BOSS_MALAK = 69131,
@@ -71,9 +72,25 @@ enum eCreatures
     BOSS_MEGAERA = 68065,
     BOSS_JI_KUN = 69712,
 
+	BOSS_DURUMU = 68036,
+
     CREATURE_HEAD_FIRE = 70212,
     CREATURE_HEAD_FROST = 70235,
     CREATURE_HEAD_VENOM = 70247,
+};
+
+enum GameObjectIds
+{
+    GO_FIRST_DOOR              = 218665,
+
+    // Jin'Rokh the Breaker
+    GO_MOGU_FOUNTAIN_NE        = 218678,
+    GO_MOGU_FOUNTAIN_NW        = 218675,
+    GO_MOGU_FOUNTAIN_SE        = 218677,
+    GO_MOGU_FOUNTAIN_SW        = 218676,
+
+    GO_JIN_ROKH_FRONT_DOOR     = 218664,     // door he is looking at
+    GO_JIN_ROKH_BACK_DOOR      = 218663,     // door to the next boss
 };
 
 enum eGameObjects
@@ -84,8 +101,6 @@ enum eGameObjects
     OBJECT_FARAKKI_DOOR = 218672,
     OBJECT_AMANI_DOOR = 218673,
     // DOORS
-    OBJECT_JINROKH_ENTRANCE = 444555,
-    OBJECT_JINROKH_HORRIDON = 444556,
     OBJECT_HORRIDON_ENTRACE = 444557,
     OBJECT_HORRIDON_COUNCIL = 444558,
     OBJECT_COUNCIL_TORTOS = 444559,

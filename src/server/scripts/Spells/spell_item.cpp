@@ -2397,13 +2397,10 @@ public:
         {
             if (GetTarget() && GetCaster() && GetCaster()->GetTypeId() == TYPEID_PLAYER)
             {
-                if (roll_chance_i(50)) // Cutting proc rate by 1/2 (hacked as shit)
-                {
-                    int32 damage = (GetCaster()->ToPlayer()->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_ALL) * 2) + 1;
+				int32 damage = (GetCaster()->ToPlayer()->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_ALL) * 2) + 1;
 
-                    if (Unit* SelectTarget = GetCaster()->ToPlayer()->GetSelectedUnit())
-                        GetCaster()->CastCustomSpell(SelectTarget, 148008, &damage, NULL, NULL, true, NULL);
-                }
+				if (Unit* SelectTarget = GetCaster()->ToPlayer()->GetSelectedUnit())
+					GetCaster()->CastCustomSpell(SelectTarget, 148008, &damage, NULL, NULL, true, NULL);
             }
         }
 
@@ -2433,13 +2430,10 @@ public:
         {
             if (GetTarget() && GetCaster())
             {
-                if (roll_chance_i(50)) // Cutting proc rate by 1/2 (hacked as shit)
-                {
-                    int32 damage = GetCaster()->ToPlayer()->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_ALL) + 15000;
+                int32 damage = GetCaster()->ToPlayer()->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_ALL) + 15000;
 
-                    if (Unit* SelectTarget = GetCaster()->ToPlayer()->GetSelectedUnit())
-                        GetCaster()->CastCustomSpell(SelectTarget, 148008, &damage, NULL, NULL, true, NULL);
-                }
+                if (Unit* SelectTarget = GetCaster()->ToPlayer()->GetSelectedUnit())
+                    GetCaster()->CastCustomSpell(SelectTarget, 148008, &damage, NULL, NULL, true, NULL);
             }
         }
 

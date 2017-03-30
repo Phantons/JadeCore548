@@ -642,7 +642,7 @@ public:
 			me->SetObjectScale(1.0f);
 		}
 
-        int32 effectcanstart;
+        uint32 effectcanstart;
         bool caneffectstart;
 
 		void Reset()

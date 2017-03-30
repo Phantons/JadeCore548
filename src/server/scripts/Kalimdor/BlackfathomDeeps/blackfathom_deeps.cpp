@@ -81,7 +81,7 @@ public:
     {
         npc_blackfathom_deeps_eventAI(Creature* creature) : ScriptedAI(creature)
         {
-            if (creature->isSummon())
+            if (creature->IsSummon())
             {
                 creature->SetHomePosition(HomePosition);
                 AttackPlayer();
@@ -186,7 +186,7 @@ public:
 
         void JustDied(Unit* /*killer*/)
         {
-            if (me->isSummon()) //we are not a normal spawn.
+            if (me->IsSummon()) //we are not a normal spawn.
                 if (instance)
                     instance->SetData(DATA_EVENT, instance->GetData(DATA_EVENT) + 1);
         }

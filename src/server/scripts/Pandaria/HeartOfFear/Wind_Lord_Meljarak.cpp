@@ -978,7 +978,7 @@ public:
 			me->SetReactState(REACT_PASSIVE);
 			me->AddUnitState(UNIT_STATE_CANNOT_AUTOATTACK);
 		}
-		int32 amplitude;
+		uint32 amplitude;
 		void Reset()
 		{
 			me->setFaction(16);
@@ -1033,7 +1033,7 @@ public:
 			me->SetObjectScale(1.0f);
 			me->SetSpeed(MOVE_RUN, 0.0f, true);
 		}
-		int32 CanBombTimer;
+		uint32 CanBombTimer;
 		int32 CanBomb;
 
 		void Reset()

@@ -221,7 +221,7 @@ void Creature::DisappearAndDie()
 
 void Creature::SearchFormation()
 {
-    if (isSummon())
+    if (IsSummon())
         return;
 
     uint32 lowguid = GetDBTableGUIDLow();
@@ -2242,7 +2242,7 @@ bool Creature::_IsTargetAcceptable(const Unit* target) const
 
 void Creature::SaveRespawnTime()
 {
-    if (isSummon() || !m_DBTableGuid || (m_creatureData && !m_creatureData->dbData))
+    if (IsSummon() || !m_DBTableGuid || (m_creatureData && !m_creatureData->dbData))
         return;
 
     GetMap()->SaveCreatureRespawnTime(m_DBTableGuid, m_respawnTime);

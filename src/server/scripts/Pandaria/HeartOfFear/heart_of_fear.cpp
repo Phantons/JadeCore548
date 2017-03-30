@@ -458,7 +458,7 @@ public:
 			me->setFaction(16);
 		}
 
-		int32 RushTimer;
+		uint16 RushTimer;
 
 		void Reset()
 		{
@@ -524,7 +524,7 @@ public:
 			me->setFaction(16);
 		}
 
-		int32 GustTimer;
+		uint16 GustTimer;
 
 		void Reset()
 		{
@@ -580,7 +580,7 @@ public:
 			me->setFaction(16);
 		}
 
-		int32 ZephyrCast;
+		uint16 ZephyrCast;
 
 		void Reset()
 		{
@@ -692,7 +692,7 @@ public:
 			me->SetSpeed(MOVE_RUN, 0.0f, true);
 		}
 
-		int32 AmberVolley;
+		uint16 AmberVolley;
 
 		void Reset()
 		{
@@ -745,9 +745,9 @@ public:
 			me->setFaction(16);
 		}
 		// 126907
-		int32 GriveousWhirl_Bleed;
+		uint16 GriveousWhirl_Bleed;
 		// 126901
-		int32 Mortal_Rend;
+		uint16 Mortal_Rend;
 
 		void Reset()
 		{
@@ -848,9 +848,9 @@ public:
 			me->setFaction(16);
 		}
 		// 125069
-		int32 amberspew;
+		uint16 amberspew;
 		// 125081
-		int32 slam;
+		uint16 slam;
 
 		void Reset()
 		{
@@ -917,9 +917,9 @@ public:
 			me->setFaction(16);
 		}
 		// 125490
-		int32 burningSting;
+		uint16 burningSting;
 		// 125480
-		int32 slash;
+		uint16 slash;
 
 		void Reset()
 		{
@@ -1124,8 +1124,8 @@ public:
 			me->setFaction(16);
 		}
 
-		int32 hivebomb;
-		int32 hivejuice;
+		uint16 hivebomb;
+		uint16 hivejuice;
 
 		void EnterCombat(Unit* who)
 		{

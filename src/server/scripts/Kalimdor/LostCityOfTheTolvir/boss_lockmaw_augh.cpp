@@ -553,7 +553,7 @@ public:
                 {
                     lockmaw->AI()->JustSummoned(me);
 
-                    if (me->isSummon())
+                    if (me->IsSummon())
                         if (Unit* summoner = me->ToTempSummon()->GetSummoner())
                             if (Creature* crock = summoner->ToCreature())
                                 lockmaw->AI()->JustSummoned(crock);

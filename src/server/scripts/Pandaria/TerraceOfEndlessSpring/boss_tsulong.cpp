@@ -891,7 +891,7 @@ public:
             pInstance = creature->GetInstanceScript();
             me->Respawn();
         }
-        int32 frighten;
+        uint32 frighten;
 
         void Reset()
         {
@@ -947,7 +947,7 @@ public:
             creature->SetReactState(REACT_PASSIVE);
             me->Respawn();
         }
-        int32 unstablebolt;
+        uint32 unstablebolt;
 
         void Reset()
         {
@@ -1012,7 +1012,7 @@ public:
             me->Respawn();
         }
 
-        int32 terrorize;
+        uint32 terrorize;
 
         void Reset()
         {

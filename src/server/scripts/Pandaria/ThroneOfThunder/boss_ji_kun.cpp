@@ -903,10 +903,6 @@ public:
 
             if (!UpdateVictim())
                 return;
-
-            switch (events.ExecuteEvent())
-            {
-            }
         }
     };
 

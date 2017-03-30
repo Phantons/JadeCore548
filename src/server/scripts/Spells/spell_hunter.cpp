@@ -651,7 +651,7 @@ class spell_hun_a_murder_of_crows : public SpellScriptLoader
                         for (std::list<Creature*>::iterator i = tempList.begin(); i != tempList.end(); ++i)
                         {
                             Unit* owner = (*i)->GetOwner();
-                            if (owner && owner == _player && (*i)->isSummon())
+                            if (owner && owner == _player && (*i)->IsSummon())
                                 continue;
 
                             crowsList.remove((*i));

@@ -537,7 +537,7 @@ class mob_gothik_minion : public CreatureScript
 
             void JustDied(Unit* /*killer*/)
             {
-                if (me->isSummon())
+                if (me->IsSummon())
                     if (Unit* owner = me->ToTempSummon()->GetSummoner())
                         CombatAI::JustDied(owner);
             }

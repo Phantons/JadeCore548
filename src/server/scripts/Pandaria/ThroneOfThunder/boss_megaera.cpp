@@ -217,7 +217,7 @@ public:
             DespawnCreaturesInArea(CREATURE_HEAD_FROST, me);
             DespawnCreaturesInArea(CREATURE_HEAD_VENOM, me);
         } 
-        void SummonRed(uint32 modifier, bool clouded)
+        void SummonRed(int32 modifier, bool clouded)
         {
             if (!clouded)
             {
@@ -284,7 +284,7 @@ public:
                 }
             }
         }
-        void SummonBlue(uint32 modifier, bool clouded)
+        void SummonBlue(int32 modifier, bool clouded)
         {
             if (!clouded)
             {
@@ -349,7 +349,7 @@ public:
                 }
             }
         }
-        void SummonGreen(uint32 modifier, bool clouded)
+        void SummonGreen(int32 modifier, bool clouded)
         {
             if (!clouded)
             {

@@ -9016,10 +9016,10 @@ void SpellMgr::LoadSpellCustomAttr()
             }
 
             // Spells which update last tick (only one tick)
-            switch (spellInfo->Id)
-            {
-
-            }
+            // switch (spellInfo->Id)
+            // {
+				
+            // }
 
             switch (spellInfo->Id)
             {

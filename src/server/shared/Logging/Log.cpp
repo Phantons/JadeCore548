@@ -34,7 +34,7 @@ Log::Log() : worker(NULL)
     SetRealmID(0);
     m_logsTimestamp = "_" + GetTimestampStr();
     LoadFromConfig();
-    pandashanLog = fopen("pandashan.log", "a");
+    pandashanLog = fopen(std::string(m_logsDir).append("pandashan.log").c_str(), "a");
 }
 
 Log::~Log()
@@ -42,7 +42,6 @@ Log::~Log()
     Close();
 
     fclose(pandashanLog);
-    delete pandashanLog;
     pandashanLog = NULL;
 }
 
@@ -233,7 +232,7 @@ void Log::CreateLoggerFromConfig(const char* name)
             //fprintf(stdout, "Log::CreateLoggerFromConfig: Added Appender %s to Logger %s\n", appender->getName().c_str(), name); // DEBUG - RemoveMe
         }
         else
-            fprintf(stderr, "Error while configuring Appender %s in Logger %s. Appender does not exist", str.c_str(), name);
+            fprintf(stderr, "Error while configuring Appender %s in Logger %s. Appender does not exist\n", str.c_str(), name);
         ss >> str;
     }
 }

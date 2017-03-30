@@ -121,8 +121,8 @@ public:
 			me->setFaction(16);
 		}
 		InstanceScript* instance;
-		int32 phase1;
-		int32 phase2;
+		uint32 phase1;
+		uint32 phase2;
 
 		bool phase1_timer;
 		bool phase2_timer;
@@ -580,7 +580,7 @@ public:
 			me->SetReactState(REACT_AGGRESSIVE);
 			me->AddUnitState(UNIT_STATE_CANNOT_AUTOATTACK);
 		}
-		int32 ticking;
+		uint32 ticking;
 		bool canexploade;
 		void Reset()
 		{
@@ -818,7 +818,7 @@ public:
 			events.ScheduleEvent(EVENT_POISON_DRENCHED_ARMOR, urand(18000, 35000));
 			events.ScheduleEvent(EVENT_TOXIC_SLIME, urand(12000, 18000));
 		}
-		int32 diffdmgtrap;
+		uint32 diffdmgtrap;
 		void Reset()
 		{
 			diffdmgtrap = 2000;

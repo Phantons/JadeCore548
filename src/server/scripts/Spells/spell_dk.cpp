@@ -24,6 +24,7 @@
 #include "ScriptMgr.h"
 #include "SpellScript.h"
 #include "SpellAuraEffects.h"
+#include "CreatureAI.h"
 
 enum DeathKnightSpells
 {
@@ -81,7 +82,11 @@ enum DeathKnightSpells
     DK_SPELL_GEIST_FORM                         = 121916,
     DK_SPELL_SOUL_REAPER_BUFF                   = 114868,
     DK_SPELL_ANTIMAGIC_SHELL_SELF               = 48707,
-    DK_GLYPH_OF_REGENERATIVE_MAGIC              = 146648
+	DK_GLYPH_OF_REGENERATIVE_MAGIC              = 146648,
+	SPELL_DK_DANCING_RUNE_WEAPON                = 49028,
+	SPELL_DK_DEATH_COIL_DAMAGE                  = 47632,
+	SPELL_DK_DEATH_COIL_HEAL                    = 47633,
+
 };
 
 // Death and Decay - 43265
@@ -317,7 +322,7 @@ class spell_dk_wild_mushroom_plague : public SpellScriptLoader
                     for (std::list<Creature*>::iterator i = tempList.begin(); i != tempList.end(); ++i)
                     {
                         Unit* owner = (*i)->GetOwner();
-                        if (owner && owner == _player && (*i)->isSummon())
+                        if (owner && owner == _player && (*i)->IsSummon())
                             continue;
 
                         mushroomlist.remove((*i));
@@ -2215,6 +2220,132 @@ class spell_dk_conversion_heal_aura : public SpellScriptLoader
         }
 };
 
+class spell_dk_dancing_rune_weapon : public SpellScriptLoader
+{
+public:
+	spell_dk_dancing_rune_weapon() : SpellScriptLoader("spell_dk_dancing_rune_weapon") { }
+
+	class spell_dk_dancing_rune_weapon_AuraScript : public AuraScript
+	{
+		PrepareAuraScript(spell_dk_dancing_rune_weapon_AuraScript);
+
+		bool CheckProc(ProcEventInfo& eventInfo)
+		{
+			if (!eventInfo.GetActor() || !eventInfo.GetActionTarget() || !eventInfo.GetActionTarget()->isAlive() || eventInfo.GetActor()->GetTypeId() != TYPEID_PLAYER)
+				return false;
+
+			const SpellInfo* spellInfo = eventInfo.GetDamageInfo()->GetSpellInfo();
+			if (!spellInfo)
+				return true;
+
+			// Death Coil exception, Check if spell is from spellbook
+			if (spellInfo->Id != SPELL_DK_DEATH_COIL_DAMAGE && !eventInfo.GetActor()->ToPlayer()->HasActiveSpell(spellInfo->Id))
+				return false;
+
+			// Can't cast raise dead/ally, death grip, dark command, death pact, death and decay, anti-magic shell
+			if (spellInfo->SpellFamilyFlags.HasFlag(0x20A1220, 0x10000000, 0x0))
+				return false;
+
+			// AoE can be cast only once
+			if (spellInfo->IsTargetingArea() && eventInfo.GetActor() != eventInfo.GetActionTarget())
+				return false;
+
+			// No spells with summoning
+			if (spellInfo->HasEffect(SPELL_EFFECT_SUMMON))
+				return false;
+
+			// No Positive Spells
+			if (spellInfo->IsPositive())
+				return false;
+
+			return true;
+		}
+
+		void HandleProc(constAuraEffectPtr aurEff, ProcEventInfo& eventInfo)
+		{
+			PreventDefaultAction();
+
+			Unit* player = eventInfo.GetActor();
+			Unit* target = eventInfo.GetActionTarget();
+			Unit* dancingRuneWeapon = NULL;
+
+			for (Unit::ControlList::const_iterator itr = player->m_Controlled.begin(); itr != player->m_Controlled.end(); ++itr)
+				if ((*itr)->GetEntry() == GetSpellInfo()->Effects[EFFECT_0].MiscValue)
+				{
+					dancingRuneWeapon = *itr;
+					break;
+				}
+
+			if (!dancingRuneWeapon)
+				return;
+
+			dancingRuneWeapon->SetOrientation(dancingRuneWeapon->GetAngle(target));
+			if (const SpellInfo* procSpell = eventInfo.GetDamageInfo()->GetSpellInfo())
+			{
+				// ugly hack
+				if (!procSpell->IsAffectingArea())
+					GetUnitOwner()->SetFloatValue(UNIT_FIELD_COMBATREACH, 10.0f);
+				dancingRuneWeapon->CastSpell(target, procSpell->Id, true, NULL, aurEff, dancingRuneWeapon->GetGUID());
+				GetUnitOwner()->SetFloatValue(UNIT_FIELD_COMBATREACH, 0.01f);
+			}
+			else
+			{
+				target = player->GetMeleeHitRedirectTarget(target);
+				CalcDamageInfo damageInfo;
+				player->CalculateMeleeDamage(target, 0, &damageInfo, eventInfo.GetDamageInfo()->GetAttackType());
+				dancingRuneWeapon->DealDamageMods(target, damageInfo.damage, &damageInfo.absorb);
+				damageInfo.attacker = dancingRuneWeapon;
+				damageInfo.damage /= 2.0f;
+				dancingRuneWeapon->SendAttackStateUpdate(&damageInfo);
+				dancingRuneWeapon->DealMeleeDamage(&damageInfo, true);
+			}
+		}
+
+		void Register()
+		{
+			DoCheckProc += AuraCheckProcFn(spell_dk_dancing_rune_weapon_AuraScript::CheckProc);
+			OnEffectProc += AuraEffectProcFn(spell_dk_dancing_rune_weapon_AuraScript::HandleProc, EFFECT_1, SPELL_AURA_DUMMY);
+		}
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new spell_dk_dancing_rune_weapon_AuraScript();
+	}
+};
+
+class spell_dk_dancing_rune_weapon_visual : public SpellScriptLoader
+{
+public:
+	spell_dk_dancing_rune_weapon_visual() : SpellScriptLoader("spell_dk_dancing_rune_weapon_visual") { }
+
+	class spell_dk_dancing_rune_weapon_visual_AuraScript : public AuraScript
+	{
+		PrepareAuraScript(spell_dk_dancing_rune_weapon_visual_AuraScript);
+
+		void HandleEffectApply(constAuraEffectPtr aurEff, AuraEffectHandleModes /*mode*/)
+		{
+			PreventDefaultAction();
+			if (Unit* owner = GetUnitOwner()->ToTempSummon()->GetSummoner())
+			{
+				GetUnitOwner()->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, owner->GetUInt32Value(PLAYER_VISIBLE_ITEM_16_ENTRYID));
+				GetUnitOwner()->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 1, owner->GetUInt32Value(PLAYER_VISIBLE_ITEM_17_ENTRYID));
+				GetUnitOwner()->SetFloatValue(UNIT_FIELD_COMBATREACH, 0.01f);
+			}
+		}
+
+		void Register()
+		{
+			OnEffectApply += AuraEffectApplyFn(spell_dk_dancing_rune_weapon_visual_AuraScript::HandleEffectApply, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+		}
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new spell_dk_dancing_rune_weapon_visual_AuraScript();
+	}
+};
+
 void AddSC_deathknight_spell_scripts()
 {
     new spell_dk_death_and_decay();
@@ -2263,4 +2394,6 @@ void AddSC_deathknight_spell_scripts()
     new spell_dk_glyph_of_the_geist();
     new spell_dk_presences();
     new spell_dk_conversion_heal_aura();
+	new spell_dk_dancing_rune_weapon();
+	new spell_dk_dancing_rune_weapon_visual();
 }

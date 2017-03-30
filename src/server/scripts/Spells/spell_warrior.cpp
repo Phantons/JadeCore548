@@ -733,7 +733,7 @@ class spell_warr_mocking_banner : public SpellScriptLoader
                     for (auto itr : tempList)
                     {
                         Unit* owner = itr->GetOwner();
-                        if (owner && owner == player && itr->isSummon())
+                        if (owner && owner == player && itr->IsSummon())
                             continue;
 
                         bannerList.remove(itr);
@@ -809,7 +809,7 @@ class spell_warr_raging_blow : public SpellScriptLoader
                                 ragingBlow->SetStackAmount(stacks - 1);
                          }
             }
-
+            
             void Register()
             {
                 OnHit += SpellHitFn(spell_warr_raging_blow_SpellScript::HandleOnHit);
@@ -888,6 +888,12 @@ class spell_warr_mortal_strike : public SpellScriptLoader
                             _player->StartReactiveTimer(REACTIVE_OVERPOWER);
                             _player->CastSpell(_player,WARRIOR_SPELL_ALLOW_OVERPOWER, true);
                         }
+
+						if (_player->HasAura(WARRIOR_SPELL_T16_DPS_4P_BONUS))
+						{
+							if (roll_chance_i(10))
+								_player->CastSpell(_player, WARRIOR_SPELL_T16_DPS_4P_BONUS_PROC, true);
+						}
                     }
                 }
             }
@@ -1132,9 +1138,17 @@ class spell_warr_bloodthirst : public SpellScriptLoader
                         if (GetHitDamage())
                         {
                             _player->CastSpell(_player, WARRIOR_SPELL_BLOODTHIRST_HEAL, true);
-                            if (_player->HasAura(WARRIOR_SPELL_BLOODSURGE))
-                                if(roll_chance_i(20))
+							if (_player->HasAura(WARRIOR_SPELL_BLOODSURGE))
+							{
+								if(roll_chance_i(20))
                                     _player->CastSpell(_player,WARRIOR_SPELL_BLOODSURGE_EFFECT, true);
+							}
+
+							if (_player->HasAura(WARRIOR_SPELL_T16_DPS_4P_BONUS))
+							{
+								if (roll_chance_i(10))
+									_player->CastSpell(_player, WARRIOR_SPELL_T16_DPS_4P_BONUS_PROC, true);
+							}
                         }
             }
 
@@ -1245,6 +1259,7 @@ class spell_warr_thunder_clap : public SpellScriptLoader
                     if (Unit* target = GetHitUnit())
                     {
                         _player->CastSpell(target, WARRIOR_SPELL_WEAKENED_BLOWS, true);
+                        _player->CastSpell(target, WARRIOR_SPELL_DEEP_WOUNDS, true);
                         // Glyph of Resonating Power - 58356, increases damage the damage and cooldown by 50%
                         if (_player->HasAura(58356))
                         {
@@ -1292,16 +1307,6 @@ class spell_warr_deep_wounds : public SpellScriptLoader
                                 _player->CastSpell(target, WARRIOR_SPELL_DEEP_WOUNDS, true);
                             else
                                 _player->CastSpell(target, WARRIOR_SPELL_DEEP_WOUNDS, true);
-                        }
-
-                        // Item - Warrior T16 DPS 4P Bonus - 144441
-                        if (GetSpellInfo()->Id == WARRIOR_SPELL_MORTAL_STRIKE_AURA || GetSpellInfo()->Id == WARRIOR_SPELL_BLOODTHIRST)
-                        {
-                            if (_player->HasAura(WARRIOR_SPELL_T16_DPS_4P_BONUS))
-                            {
-                                if (roll_chance_i(10))
-                                    _player->CastSpell(_player, WARRIOR_SPELL_T16_DPS_4P_BONUS_PROC, true);
-                            }
                         }
                     }
                 }
@@ -1743,6 +1748,57 @@ class spell_warr_intervene : public SpellScriptLoader
         }
 };
 
+// Single - Minded Furry 81099
+class spell_warr_single_minded_furry : public SpellScriptLoader
+{
+    public:
+        spell_warr_single_minded_furry() : SpellScriptLoader("spell_warr_single_minded_furry") { }
+
+        class spell_warr_single_minded_furry_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_warr_single_minded_furry_AuraScript);
+
+            void OnUpdate(uint32 diff, AuraEffectPtr aurEff)
+            {
+                if (!GetCaster())
+                    return;
+
+                int32 amount = aurEff->GetAmount();
+                bool Check = false;
+
+                if (Player* owner = GetCaster()->ToPlayer()) // if owner is player
+                    if (Item *mainhand = owner->GetWeaponForAttack(BASE_ATTACK, true)) // if have mainhand
+                        if (Item *offhand = owner->GetWeaponForAttack(OFF_ATTACK, true)) // if have offhand
+                            if (mainhand->GetTemplate() && mainhand->GetTemplate()->SubClass != ITEM_SUBCLASS_WEAPON_AXE2 && mainhand->GetTemplate()->SubClass != ITEM_SUBCLASS_WEAPON_MACE2 
+                                && mainhand->GetTemplate()->SubClass != ITEM_SUBCLASS_WEAPON_SWORD2 && mainhand->GetTemplate()->SubClass != ITEM_SUBCLASS_WEAPON_EXOTIC2) // if mainhand is one hand weapon
+                                if (offhand->GetTemplate() && offhand->GetTemplate()->SubClass != ITEM_SUBCLASS_WEAPON_AXE2 && offhand->GetTemplate()->SubClass != ITEM_SUBCLASS_WEAPON_MACE2 
+                                    && offhand->GetTemplate()->SubClass != ITEM_SUBCLASS_WEAPON_SWORD2 && offhand->GetTemplate()->SubClass != ITEM_SUBCLASS_WEAPON_EXOTIC2)// if offhand is one hand weapon
+                                        Check = true;
+
+                if (!Check && amount != 0)
+                {
+                    aurEff->GetBase()->GetEffect(EFFECT_0)->ChangeAmount(0);
+                    aurEff->GetBase()->GetEffect(EFFECT_1)->ChangeAmount(0);
+                }
+                else if (Check && amount == 0)
+                {
+                    aurEff->GetBase()->GetEffect(EFFECT_0)->ChangeAmount(35);
+                    aurEff->GetBase()->GetEffect(EFFECT_1)->ChangeAmount(35);
+                }
+            }
+
+            void Register()
+            {
+                OnEffectUpdate += AuraEffectUpdateFn(spell_warr_single_minded_furry_AuraScript::OnUpdate, EFFECT_1, SPELL_AURA_MOD_OFFHAND_DAMAGE_PCT);
+            }
+        };
+
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_warr_single_minded_furry_AuraScript();
+        }
+};
+
 void AddSC_warrior_spell_scripts()
 {
     new spell_warr_victorious_state();
@@ -1785,4 +1841,5 @@ void AddSC_warrior_spell_scripts()
     new spell_warr_checkway();
     new spell_warr_glyph_of_gag_order();
     new spell_warr_intervene();
+	new spell_warr_single_minded_furry();
 }

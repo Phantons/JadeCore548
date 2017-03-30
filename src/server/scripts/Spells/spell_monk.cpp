@@ -914,7 +914,7 @@ public:
             // Remove Current Trans
             if (Creature* CurrentTrasendanceTrigger = player->FindNearestCreature(54569, 500.0f, true))
             {
-                if (CurrentTrasendanceTrigger->isSummon())
+                if (CurrentTrasendanceTrigger->IsSummon())
                     CurrentTrasendanceTrigger->DespawnOrUnsummon(500);
             }
 
@@ -1073,7 +1073,7 @@ public:
                 for (std::list<Creature*>::iterator i = tempList.begin(); i != tempList.end(); ++i)
                 {
                     Unit* owner = (*i)->GetOwner();
-                    if (owner && owner == _player && (*i)->isSummon())
+                    if (owner && owner == _player && (*i)->IsSummon())
                         continue;
 
                     statueList.remove((*i));
@@ -1306,7 +1306,7 @@ public:
                 for (std::list<Creature*>::iterator i = tempList.begin(); i != tempList.end(); ++i)
                 {
                     Unit* owner = (*i)->GetOwner();
-                    if (owner && owner == player && (*i)->isSummon())
+                    if (owner && owner == player && (*i)->IsSummon())
                         continue;
 
                     blackOxList.remove((*i));
@@ -1382,7 +1382,7 @@ public:
                     for (std::list<Creature*>::iterator i = tempList.begin(); i != tempList.end(); ++i)
                     {
                         Unit* owner = (*i)->GetOwner();
-                        if (owner && owner->GetGUID() == _plr->GetGUID() && (*i)->isSummon())
+                        if (owner && owner->GetGUID() == _plr->GetGUID() && (*i)->IsSummon())
                             continue;
 
                         statueList.remove((*i));
@@ -2005,7 +2005,7 @@ public:
                 for (std::list<Creature*>::iterator i = tempList.begin(); i != tempList.end(); ++i)
                 {
                     Unit* owner = (*i)->GetOwner();
-                    if (owner && owner == _player && (*i)->isSummon())
+                    if (owner && owner == _player && (*i)->IsSummon())
                         continue;
 
                     jadeSerpentlist.remove((*i));
@@ -2319,7 +2319,7 @@ public:
                 for (std::list<Creature*>::iterator i = statueList.begin(); i != statueList.end();)
                 {
                     Unit* owner = (*i)->GetOwner();
-                    if (owner && owner == _player && (*i)->isSummon())
+                    if (owner && owner == _player && (*i)->IsSummon())
                     {
                         ++i;
                         continue;
@@ -3166,7 +3166,7 @@ public:
                     for (std::list<Creature*>::iterator i = statueList.begin(); i != statueList.end();)
                     {
                         Unit* owner = (*i)->GetOwner();
-                        if (owner && owner == _player && (*i)->isSummon())
+                        if (owner && owner == _player && (*i)->IsSummon())
                         {
                             ++i;
                             continue;
@@ -3229,7 +3229,7 @@ public:
                         for (std::list<Creature*>::iterator i = tempList.begin(); i != tempList.end(); ++i)
                         {
                             Unit* owner = (*i)->GetOwner();
-                            if (owner && owner == _player && (*i)->isSummon())
+                            if (owner && owner == _player && (*i)->IsSummon())
                                 continue;
 
                             statueList.remove((*i));

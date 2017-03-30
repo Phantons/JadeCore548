@@ -1,7 +1,6 @@
 /*
-* Copyright (C) 2012-2013 JadeCore <http://www.pandashan.com/>
+* Copyright (C) 2016-20XX JadeCore <https://github.com/cooler-SAI/JadeCore548-patched>
 * Copyright (C) 2008-2012 TrinityCore <http://www.trinitycore.org/>
-* Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -15,1060 +14,1244 @@
 *
 * You should have received a copy of the GNU General Public License along
 * with this program. If not, see <http://www.gnu.org/licenses/>.
+*
+* Raid: Throne of Thunder.
+* Boss: Jin'rokh the Breaker.
+*
+* Wowpedia boss history:
+*
+* "Jin'rokh was once part of an envoy sent to Stranglethorn Vale in order to stop Hakkar the Soulflayer from escaping Zul'Gurub.
+*  This Zandalari troll was a dire troll that aided warriors and paladins with the strength that they would have needed to defeat the powerful loa.
+*
+*  After Hakkar was defeated Jin'rokh and his fellow trolls left Yojamba Isle back to Zandalar. That was until the Cataclysm destroyed their land.
+*  He, along with any survivors, made their way back to the main lands to reunite the tribes, and eventually to Pandaria.
+*  He has since undergone a transformation after being enchanted with powers over storm by the Thunder King."
 */
 
-#include "GameObjectAI.h"
+#include "ObjectMgr.h"
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
+#include "SpellScript.h"
+#include "SpellAuraEffects.h"
+#include "SpellAuras.h"
+#include "MapManager.h"
+#include "Spell.h"
+#include "Vehicle.h"
+#include "Cell.h"
+#include "CellImpl.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
+#include "CreatureTextMgr.h"
+#include "Unit.h"
+#include "Player.h"
+#include "Creature.h"
+#include "InstanceScript.h"
+#include "Map.h"
+#include "VehicleDefines.h"
+#include "SpellInfo.h"
+
 #include "throne_of_thunder.h"
 
-Position centerTrigger = { 5892.54f, 6262.93f, 124.035f, 3.124630f };
-Position Statues[4] =
+enum Yells
 {
-    { 5942.01f, 6310.80f, 148.946f, 4.098326f },
-    { 5939.49f, 6215.77f, 152.630f, 2.311547f },
-    { 5841.41f, 6214.92f, 151.430f, 0.882122f },
-    { 5842.95f, 6312.26f, 151.260f, 5.376692f },
+	SAY_AGGRO				= 0, // I must break you.. (35547)
+	SAY_INTRO				= 1, // The Thunda' King give me power.. come.. I'll show you! (35550)
+	SAY_DEATH				= 2, // How.. you.. beat.. me.. (35549)
+	SAY_BERSERK				= 3, // Bored.. you die now! (35548)
+	SAY_KILL				= 4, // Weak... (35551) / So easy to break..(35552)
+	SAY_STATIC_BURST		= 5, // Smash... (35553)
+	SAY_THUNDERING_THROW	= 6, // I'll crush your bones! (35554)
+	SAY_LIGHTNING_STORM		= 7, // I call the storm! (35555)
+	SAY_FOCUSED_LIGHTNING	= 8, // Zap... (35556)
+
+	ANN_THUNDERING_THROW	= 9,
+	ANN_FOCUSED_LIGHTNING	= 10,
+	ANN_LIGHTNING_STORM		= 11
 };
 
-enum eeSpells
+enum Spells
 {
-    // Jin'rokh the breakfart
-    SPELL_FOCUSED_LIGHTNING_SUMMON = 139206,
-    SPELL_FOCUSED_LIGHTNING_ORB_TICK = 137423,
-    SPELL_FOCUSED_LIGHTNING_VISUAL = 137425,
-    SPELL_FOCUSED_LIGHTNING_UNKNOWN_DAMAGE = 139210,
-    SPELL_LIGHTNING_FISSURE_SUMMON = 137479,
-    SPELL_LIGHTNING_FISSURE_EFFECTIVE_AURA = 137480,
-    SPELL_LIGHTNING_FISSURE_CLOSE_YARD_TICK_UNKNOWN = 137485,
-    SPELL_LIGHTNING_FISSURE_UNKNOWN_EXPLOSION = 137485,
-    SPELL_LIGHTNING_FISSURE_DAMAGE_CONDUCT_WITH_ORB_UNKNOWN = 138133,
-    SPELL_LIGHTNING_FISSURE_IMPLOSION_ORB_CONTACT = 137507,
-    SPELL_STATIC_BURST = 137162,
-    SPELL_STATIC_WOUND = 138349, // APPLIED AFTER BURST TO THE TANK
-    SPELL_THUNDERING_THROW_PLAYER_HIT_GROUND = 137167,
-    SPELL_THUNDERING_THROW_JUMPING_TO_STATUE = 137173,
-    SPELL_THUNDERING_THROW_JUMPING_FROM_STATUE = 140580,
-    SPELL_THUNDERING_THROW_UNKNOWN_DAMAGE = 137370,
-    SPELL_THUNDERING_THROW_STUN = 137371,
-    SPELL_THUNDERING_THROW_BOSS_GRASPING_PLAYER = 140594,
-    SPELL_THUNDERING_THROW_DUMMY = 140597,
-    SPELL_THUNDERING_THROW_LIGHTNING_ANIMATION = 140606,
-    SPELL_FLUDITIY = 138002,
-    SPELL_THROW_DUMMY = 137180,
-    SPELL_CONDUTIVE_WATER_SUMMON = 137145,
-    SPELL_CONDUCTIVE_WATER_VISUAL = 137277,
-    SPELL_CONDUCTIVE_WATER_SIZE = 137694,
-    SPELL_CONDUCTIVE_WATER_ELECTERTUED = 137978, // FUCK GRAMMAR
-    SPELL_CONDUTIVE_WATER_LIGHTNING_VISUAL = 138568,
-    SPELL_ELECTRIFYING_WATER = 138006,
-    SPELL_LIGHTNING_STORM = 137313,
-    SPELL_LIGHTNING_STORM_DOT = 140560,
-    SPELL_LIGHTNING_VISUAL = 140549,
-    SPELL_WATER_SPROUT_VISUAL = 137340,
-    SPELL_CONDUCTIVE_WATER_ELECTERT_VISUAL = 137978,
+    // Boss
 
-    // HEROIC
-    SPELL_IONIZATION_DUMMY = 138732,
-    SPELL_IONIZATION_EXPLOSION = 138733,
+    // Thundering Throw.
+    SPELL_RIDE_VEHICLE          = 43671,  // Grab spell (Control Vehicle).
 
-    SPELL_LIGHTNING_STRIKE_ADD_VISUAL = 137966, // ADD VISUAL, add scale 0.3
-    SPELL_LIGHNING_STRIKE_VISUAL = 138299,
-    SPELL_LIGHTNING_STRIKE_HIT = 137647,
-};
-enum eeTriggers
-{
-    TRIGGER_WATER = 69469,
-    TRIGGER_FISSURE = 69609,
-    TRIGGER_FOCUSED_LIGHTNING_ORB = 70174,
-    TRIGGER_THUNDERING_THROWING = 836571,
-    TRIGGER_THUNDERING_EXPLODE = 543673,
-    TRIGGER_LIGHTNING_STRIKE_PILLAR = 324213,
-    TRIGGER_LIGHTNING_STRIKE_STAR = 324124,
-};
-enum eeEvents
-{
-    // Jinrokh
-    EVENT_SPELL_FOCUSED_LIGHTNING = 100,
-    EVENT_SPELL_LIGHTNING_FISSURE = 101,
-    EVENT_SPELL_IMPLOSION = 102,
-    EVENT_SPEL_STATIC_BURST = 103,
-    EVENT_SPELL_STATIC_WOUND = 104,
-    EVENT_BERSERK = 105, // jelly druid
-    EVENT_THUNDERING_THROW = 106,
-    EVENT_LIGHTNING_STORM = 107,
-    EVENT_SPELL_FOCUSED_LIGHTNING_SUMMON = 108,
-    EVENT_LIGHTNING_STORM_REMOVE_AURA = 109,
-    EVENT_THUNDERING_THROW_JUMP_TARGET = 110,
-    EVENT_THUNDERING_THROW_JUMP_TARGET_2 = 111,
+    SPELL_THUNDERING_THROW      = 137180, // Main cast time spell, dummy effect 0 for SPELL_THUNDERING_THROW_GRAB.
+    SPELL_THUNDERING_THROW_GRAB = 137161, // Silence, pacify, eff. 0 script effect for SPELL_RIDE_VEHICLE.
+    SPELL_THUNDERING_THROW_JMP  = 137173, // Jump behind target spell cast on Statue npc.
+    SPELL_THUNDERING_THROW_PLR  = 137370, // Dmg dealed to player on impact.
+    SPELL_THUNDERING_THROW_AOE  = 137167, // Additional 190000 to 210000 Nature damage to other players within 8 yards of the point of impact.
+    SPELL_THUNDERING_THROW_STUN = 137371, // Stun for 5 seconds on other players within 8 yards of the point of impact.
 
-    // heroic
-    EVENT_IONIZATION = 112,
-    EVENT_LIGHTNING_STRIKE = 113,
-};
-enum eeTalks
-{
-    JINROKH_AGGRO = 0, // I must break you.. (35547)
-    JINROKH_INTRO = 1, // The Thunda' King give me power.. come.. I'll show you! (35550)
-    JINROKH_DEATH = 2, // How.. you.. beat.. me.. (35549)
-    JINROKH_BERSERK = 3, // Bored.. you die now! (35548)
-    JINROKH_KILL = 4, // Weak... (35551) / So easy to break..(35552)
-    JINROKH_SPELL_1 = 5, // Smash... (35553)
-    JINROKH_SPELL_2 = 6, // I'll crush your bones! (35554)
-    JINROKH_SPELL_3 = 7, // I call the storm! (35555)
-    JINROKH_SPELL_4 = 8, // Zap... (35556)
-};
-enum eeTimers
-{
-    JINROKH_FOCUSED_LIGHTNING_INTERVAL = 15000,
-    JINROKH_SPELL_STATIC_BURST_INTERVAL = 30000,
-    JINROKH_BERSERK_INTERVAL = 420000,
-    JINROKH_SPELL_STATIC_WOUND_INTERVAL = 5000,
-    JINROKH_THUNDERING_THROW_INTERVAL = 30000,
-    JINROKH_THUNDERING_THROW_INTERVAL_2ND_HIT = 90000,
-    JINROKH_EVENT_LIGHTNING_STORM_INTERVAL = 90000,
-    JINROKH_IONIZATION_INTERVAL = 90000, //starts with 1 minute after the fight
-};
-enum eeActions
-{
-    ACTION_TRIGGER_PILLAR = 4324,
-};
-class RemoveIfTanks
-{
-public:
-    RemoveIfTanks() {}
-    bool operator()(WorldObject* object)
-    {
-        if (object->GetTypeId() == TYPEID_PLAYER)
-            if (Player* pobject = object->ToPlayer())
-                if (pobject->GetSpecializationId(pobject->GetActiveSpec() == SPEC_WARRIOR_PROTECTION) || pobject->GetSpecializationId(pobject->GetActiveSpec() == SPEC_PALADIN_PROTECTION)
-                    || pobject->GetSpecializationId(pobject->GetActiveSpec() == SPEC_DROOD_BEAR) || pobject->GetSpecializationId(pobject->GetActiveSpec() == SPEC_MONK_BREWMASTER) ||
-                    pobject->GetSpecializationId(pobject->GetActiveSpec() == SPEC_DK_BLOOD))
-                    return true;
-                else
-                    return false;
-    }
-};
-class jinrokh_lightning_strikes : public BasicEvent
-{
-public:
-    explicit jinrokh_lightning_strikes(Unit* unit, int value) : obj(unit), modifier(value)
-    {
-    }
+    // Conductive Waters.
+    SPELL_CONDUCTIVE_WATER_SUMM = 137145, // Summons Conductive Waters npc NPC_CONDUCTIVE_WATER.
+    SPELL_CONDUCTIVE_VISUAL     = 137277, // Water effect visual ground.
+    SPELL_CONDUCTIVE_VISUAL_2   = 137340, // Mogu fountain visual shooted by statue (orientation!).
+    SPELL_CONDUCTIVE_VISUAL_3   = 137978, // Electrified waters visual ground.
+    SPELL_CONDUCTIVE_WATER_GROW = 137676, // Aura size increase 137694 11 % each 100 ms.
+    SPELL_CONDUCTIVE_WATER      = 138470, // Debuff, + 80% Nature damage.
+    SPELL_FLUIDITY              = 138002, // Buff 40% damage dealt.
 
-    bool Execute(uint64 /*currTime*/, uint32 /*diff*/)
-    {
-        if (obj)
+    // Static burst + Wound.
+    SPELL_STATIC_BURST          = 137162, // Does 95000 to 105000 Nature damage to all players. After 3 sec., expires and applies 10 Static Wound stacks to current target (eff 1).
+
+    SPELL_STATIC_WOUND          = 138349, // Aura. Inflicts 20000 Nature damage / stack when taking melee damage. - 1 stack / 3 secs (eff 1).
+    SPELL_STATIC_WOUND_COND     = 138375, // Static Wound Conduction damage, inflicting 20000 / 3 Nature damage / stack to all players in the Conductive Water. If tank is in it.
+    SPELL_STATIC_WOUND_DMG      = 138389, // Inflicts 20000 / 3 Nature damage / stack to all players when taking melee damage. On SPELL_STATIC_WOUND.
+
+    // Focused Lightning + Lightning Fissure left after FL explosion (If the Focused Lightning detonates outside of Conductive Water, a Lightning Fissure forms).
+    SPELL_FOCUSED_LIGHTNING     = 137399, // Cast time + dummy on eff 0 (to summon Focused Lightning npc NPC_FOCUSED_LIGHTNING).
+    SPELL_FOCUSED_LIGHTNING_VIS = 137425, // Focused Lightning visual.
+    SPELL_FOCUSED_LIGHTNING_SPD = 137389, // Aura, each 500 ms increase movement speed (triggers 137437).
+    SPELL_FOCUSED_LIGHTNING_DMG = 137423, // Pulses 38000 to 42000 Nature damage every half second to other players within 5 yards.
+    SPELL_FOCUSED_LIGHTNING_FIX = 137422, // Fixated aura (player).
+    SPELL_FOCUSED_LIGHTNING_DET = 137374, // Focused Lightning Detonation damage, 170625 to 179375 Nature damage to players in 8 yards of fixated victim.
+    SPELL_FOCUSED_LIGHTNING_CND = 137530, // Focused Lightning Conduction damage, 170625 to 179375 Nature damage to all players standing in Conductive Water.
+    SPELL_FL_VIOLENT_DETONATION = 138990, // If touches ELECTRIFIED Conductive Water.
+
+    SPELL_LIGHTNING_FISSURE_SUM = 137479, // Summons Lightning Fissure npc NPC_LIGHTNING_FISSURE.
+    SPELL_LIGHTNING_FISSURE_VIS = 137480, // Fissure visual.
+    SPELL_LIGHTNING_FISSURE_DMG = 137484, // Aura.
+    SPELL_LIGHTNING_FISS_COND   = 138133, // Contacts Conductive Water, removing Lightning Fissure + 71250 - 78750 dmg to players standing in Conductive Water.
+    SPELL_IMPLOSION             = 137507, // LF implodes upon contact with another Focused Lightning, 237500 - 262500 dmg to all players + 10% damage taken from Implosion. 
+
+    // Lightning Storm.
+    SPELL_LIGHTNING_STORM       = 137313, // Aura.
+    SPELL_LIGHTNING_STORM_VIS   = 140555, // Visual.
+    SPELL_LIGHTNING_STRIKE_VIS  = 140507, // Visual too.
+    SPELL_LIGHTNING_STORM_VIS2  = 140775, // Visual 2.
+    SPELL_LIGHTNING_STORM_DMG   = 137261, // Effect 0 damage from aura.
+    SPELL_LIGHTNING_STORM_DUMMY = 140819, // Effect 1 dummy from aura.
+    SPELL_LIGHTNING_STORM_H_DMG = 137647, // Heroic, triggered on SPELL_LIGHTNING_STORM_DUMMY.
+    SPELL_LIGHTNING_DIFFUSION   = 137905, // Each Lightning Strike diffuses, 195000 to 205000 Nature damage to all players in a line. On SPELL_LIGHTNING_STORM_H_DMG.
+    SPELL_ELECTRIFIED_WATERS    = 138006, // Removes Fluidity, 35000 Nature damage / sec. to players in Conductive Water. Electrifies the water (visual change).
+
+    // Ionization - Heroic only.
+    SPELL_IONIZATION_AURA       = 138732, // Dummy on effect 1 for SPELL_IONIZATION_DMG when dispelled or duration expires.
+    SPELL_IONIZATION_DMG        = 138733, // HEROIC. Inflicts 450000 Nature damage to players within 8 yards.
+    SPELL_IONIZATION_CONDUCTION = 138743, // Ionization damage travels through Conductive Water, inflicting 450000 Nature damage to players standing in Conductive Water.
+
+    SPELL_BERSERK               = 144369  // Berserk, Enrage, Bye - Bye or, simply put, a wipe. :)
+};
+
+enum Npcs
+{
+    NPC_STATUE_TRIGGER          = 69467,
+    NPC_CONDUCTIVE_WATER        = 69469,
+	NPC_FOCUSED_LIGHTNING       = 69593,
+    NPC_LIGHTNING_FISSURE       = 69609
+};
+
+enum Events
+{
+    // Boss
+    EVENT_THUNDERING_THROW      = 1,
+    EVENT_THUNDERING_THROW_TOSS,
+    EVENT_THUNDERING_THROW_DMG,
+    EVENT_STATIC_BURST,
+    EVENT_FOCUSED_LIGHTNING,
+    EVENT_LIGHTNING_STORM_JUMP,
+    EVENT_LIGHTNING_STORM,
+    EVENT_IONIZATION,
+
+    EVENT_BERSERK,
+
+    // Focused Lightning   
+    EVENT_FOCUSED_LIGHTNING_DMG,
+
+    // Lightning Fissure
+    EVENT_FISSURE_SEARCH,
+
+    // Conductive    
+    EVENT_BUFF_DEBUFF
+};
+
+enum Actions
+{
+    // Statue trigger
+    ACTION_STATUE_WATER         = 1 // Break Mogu statue and form Conductive Water.
+};
+
+enum Timers
+{
+    TIMER_THUNDERING_THROW_F    = 28000, // 30 seconds into the fight counted with below.
+    TIMER_THUNDERING_THROW_S    = 90000, // Every 90 seconds after that.
+
+    TIMER_THUNDERING_THROW_TOSS = 2000,  // Actual throwing timer.
+    TIMER_THUNDERING_THROW_DMG  = 1500,  // Player damage timer.
+
+    TIMER_BUFF_DEBUFF           = 1100,  // Conductive Water buff / debuff refresh timer.
+
+    TIMER_STATIC_BURST_F        = 15000, // 15 seconds into the fight.
+    TIMER_STATIC_BURST_S        = 22000, // Every 22 seconds after that.
+
+    TIMER_FOCUSED_LIGHTNING_F   = 10000, // 10 seconds into the fight.
+    TIMER_FOCUSED_LIGHTNING_S   = 15000, // Every 15 seconds after that.
+
+    TIMER_FOCUSED_LIGHTNING_DMG = 500,   // Focused Lightning periodic damage.
+
+    TIMER_LIGHTNING_STORM_JUMPF = 88500, // Jump timer before Storm phase.
+    TIMER_LIGHTNING_STORM_JUMPS = 88500, // Jump timer before Storm phase.
+
+    TIMER_LIGHTNING_STORM       = 1500,  // Every 90sec counted with above.
+
+    TIMER_IONIZATION_F          = 45000, // HEROIC, once per normal phase.
+    TIMER_IONIZATION_S          = 90000,
+
+    TIMER_BERSERK               = 540000,
+};
+
+Position const middlePos        = { 5891.60f, 6263.18f, 124.11f };
+
+Position const statueTriggerPlace[4] =
+{
+    { 5841.659f, 6313.456f, 162.212f }, // South-east
+    { 5838.741f, 6210.887f, 159.103f }, // North-east
+    { 5943.230f, 6210.887f, 161.288f }, // North-west
+    { 5943.678f, 6315.564f, 163.020f }, // South-west
+};
+
+float triggerOrientations[4] =
+{
+    5.38f, // South-east O 218675
+    0.74f, // North-east O 218676
+    2.30f, // North-west O 218677
+    3.88f, // South-west O 218678
+};
+
+Position const statueThrowPlace[4] =
+{
+    { 5855.366f,  6301.588f, 157.095f }, // Jump South-east 2.39f O
+    { 5853.612f,  6227.119f, 156.869f }, // Jump North-east 3.95f O
+    { 5927.603f,  6224.533f, 158.019f }, // Jump North-west 5.69f O
+    { 5928.242f,  6301.532f, 156.285f }, // Jump South-west 0.72f O
+};
+
+Position const waterSummonPlace[4] =
+{
+    { 5861.975f, 6293.226f, 124.035f }, // South-east
+    { 5860.412f, 6232.429f, 124.035f }, // North-east
+    { 5922.794f, 6237.926f, 124.035f }, // North-west
+    { 5921.287f, 6288.865f, 124.035f }, // South-west
+};
+
+#define MAX_MOGU_STATUES 4
+
+class boss_jin_rokh_breaker : public CreatureScript
+{
+    public:
+        boss_jin_rokh_breaker() : CreatureScript("boss_jin_rokh_breaker") { }
+
+        struct boss_jin_rokh_breakerAI : public BossAI
         {
-            if (InstanceScript* instance = obj->GetInstanceScript())
+            boss_jin_rokh_breakerAI(Creature* creature) : BossAI(creature, DATA_JIN_ROKH_BREAKER_EVENT), summons(me), vehicle(creature->GetVehicleKit())
             {
-                switch (modifier)
+                instance  = creature->GetInstanceScript();
+                introDone = false;
+                ASSERT(vehicle);
+            }
+
+            InstanceScript* instance;
+            SummonList summons;
+            EventMap events;
+            Vehicle* vehicle;
+            Unit* thunderingPlayer;
+            Creature* moguTrigger;
+            bool introDone;
+            uint8 statueUsed;
+
+            void Reset()
+            {
+                events.Reset();
+                summons.DespawnAll();
+
+                for (uint8 i = 0; i < MAX_MOGU_STATUES; ++i)
+                    if (GameObject* statue = me->FindNearestGameObject(GO_MOGU_FOUNTAIN_NW + i, 300.0f))
+                        statue->SetGoState(GO_STATE_READY);
+
+                // The statues are used in order to create Conductive water in all 4 corners before wipe.
+                statueUsed = 0;
+
+                // Thundering Throw target.
+                thunderingPlayer = NULL;
+                moguTrigger      = NULL;
+
+                if (instance)
+                    instance->SetData(DATA_JIN_ROKH_BREAKER_EVENT, NOT_STARTED);
+
+                _Reset();
+            }
+
+            void MoveInLineOfSight(Unit* who)
+            {
+                if (!introDone && me->IsWithinDistInMap(who, 40) && who->GetTypeId() == TYPEID_PLAYER)
                 {
-                case 0:
-                    /*
-                    Position pos;
-                    obj->GetRandomNearPosition(pos, 40.0f);
-                    printf("tesla");
-                    obj->SummonCreature(TRIGGER_LIGHTNING_STRIKE_PILLAR, pos, TEMPSUMMON_MANUAL_DESPAWN);
-                    */
-                    std::list<Creature*> triggers;
-                    triggers.clear();
-                    obj->GetCreatureListWithEntryInGrid(triggers, TRIGGER_LIGHTNING_STRIKE_PILLAR, 400.0f);
-
-                    if (triggers.empty())
-                        return false;
-
-                    std::list<Creature*>::const_iterator it = triggers.begin();
-                    std::advance(it, urand(0, triggers.size() - 1));
-
-                    (*it)->AI()->DoAction(ACTION_TRIGGER_PILLAR);
-
-                    obj->m_Events.AddEvent(new jinrokh_lightning_strikes(obj, 0), obj->m_Events.CalculateTime(500));
-                    break;
+                    Talk(SAY_INTRO);
+                    introDone = true;
                 }
             }
-        }
-        return true;
-    }
-private:
-    Creature* storm;
-    Unit* obj;
-    int modifier;
-    int Event;
-};
-class boss_jinkorh : public CreatureScript
-{
-public:
-    boss_jinkorh() : CreatureScript("boss_jinkorh") { }
 
-    struct boss_jinkorhAI : public BossAI
-    {
-        boss_jinkorhAI(Creature* creature) : BossAI(creature, DATA_JINKORH)
-        {
-            pInstance = creature->GetInstanceScript();
-        }
-
-        InstanceScript* pInstance;
-        EventMap events;
-        Unit* target; // ORB
-        Unit* target_throw;
-
-        bool intro;
-
-        void Reset()
-        {
-            _Reset();
-            events.Reset();
-            summons.DespawnAll();
-
-            intro = false;
-            target = NULL;
-            target_throw = NULL;
-
-            for (int i = 0; i < 4; i++)
+            void EnterCombat(Unit* who)
             {
-                Creature* trigger = me->SummonCreature(TRIGGER_THUNDERING_THROWING, Statues[i], TEMPSUMMON_MANUAL_DESPAWN);
-            }
-        }
-        void JustReachedHome()
-        {
-            _JustReachedHome();
+                Talk(SAY_AGGRO);
 
-            DespawnCreaturesInArea(TRIGGER_FISSURE, me);
-            DespawnCreaturesInArea(TRIGGER_WATER, me);
-            DespawnCreaturesInArea(TRIGGER_LIGHTNING_STRIKE_STAR, me);
+                // Summon statue triggers.
+                for (uint8 i = 0; i < MAX_MOGU_STATUES; i++)
+                    if (Creature* trigger = me->SummonCreature(NPC_STATUE_TRIGGER, statueTriggerPlace[i], TEMPSUMMON_MANUAL_DESPAWN))
+                        trigger->SetFacingTo(triggerOrientations[i]);
 
-            instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_LIGHTNING_STORM_DOT);
-            instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_THUNDERING_THROW_LIGHTNING_ANIMATION);
+				events.ScheduleEvent(EVENT_THUNDERING_THROW, TIMER_THUNDERING_THROW_F);
+				events.ScheduleEvent(EVENT_STATIC_BURST, TIMER_STATIC_BURST_F);
+				events.ScheduleEvent(EVENT_FOCUSED_LIGHTNING, TIMER_FOCUSED_LIGHTNING_F);
+				events.ScheduleEvent(EVENT_LIGHTNING_STORM_JUMP, TIMER_LIGHTNING_STORM_JUMPF);
 
-            if (GameObject* JinrokhDoor = instance->instance->GetGameObject(instance->GetData64(DATA_JINROKH_DOOR)))
-            {
-                JinrokhDoor->UseDoorOrButton();
-            }
+                if (IsHeroic())
+                    events.ScheduleEvent(EVENT_IONIZATION, TIMER_IONIZATION_F);
 
-            if (pInstance)
-                pInstance->SetBossState(DATA_JINKORH, FAIL);
-        }
-        void EnterCombat(Unit* attacker)
-        {
-            if (pInstance)
-            {
-                pInstance->SendEncounterUnit(ENCOUNTER_FRAME_ENGAGE, me);
-                DoZoneInCombat();
-            }
+				events.ScheduleEvent(EVENT_BERSERK, TIMER_BERSERK);
 
-            if (GameObject* JinrokhDoor = instance->instance->GetGameObject(instance->GetData64(DATA_JINROKH_DOOR)))
-            {
-                JinrokhDoor->UseDoorOrButton();
-            }
-
-            Talk(JINROKH_AGGRO);
-
-            events.ScheduleEvent(EVENT_THUNDERING_THROW, JINROKH_THUNDERING_THROW_INTERVAL);
-            events.ScheduleEvent(EVENT_SPELL_FOCUSED_LIGHTNING, JINROKH_FOCUSED_LIGHTNING_INTERVAL);
-            events.ScheduleEvent(EVENT_SPEL_STATIC_BURST, JINROKH_SPELL_STATIC_BURST_INTERVAL);
-            events.ScheduleEvent(EVENT_LIGHTNING_STORM, JINROKH_EVENT_LIGHTNING_STORM_INTERVAL);
-            events.ScheduleEvent(EVENT_BERSERK, JINROKH_BERSERK_INTERVAL);
-
-            if (me->GetMap()->IsHeroic())
-                events.ScheduleEvent(EVENT_IONIZATION, 5555);
-        }
-        void JustSummoned(Creature* summon)
-        {
-            summons.Summon(summon);
-        }
-        void SummonedCreatureDespawn(Creature* summon)
-        {
-            summons.Despawn(summon);
-        }
-        void KilledUnit(Unit* who)
-        {
-            if (who->GetTypeId() == TYPEID_PLAYER)
-                Talk(JINROKH_KILL);
-        }
-        void MoveInLineOfSight(Unit* who)
-        {
-            if (who && who->IsInWorld() && who->GetTypeId() == TYPEID_PLAYER && !intro && me->IsWithinDistInMap(who, 40.0f))
-            {
-                intro = true;
-                Talk(JINROKH_INTRO);
-
-                me->CastSpell(me, SPELL_THUNDERING_THROW_LIGHTNING_ANIMATION);
-            }
-        }
-        void DespawnCreaturesInArea(uint32 entry, WorldObject* object)
-        {
-            std::list<Creature*> creatures;
-            GetCreatureListWithEntryInGrid(creatures, object, entry, 300.0f);
-            if (creatures.empty())
-                return;
-
-            for (std::list<Creature*>::iterator iter = creatures.begin(); iter != creatures.end(); ++iter)
-                (*iter)->DespawnOrUnsummon();
-        }
-        void JustDied(Unit* killer)
-        {
-            if (pInstance)
-            {
-                pInstance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
-                pInstance->SetBossState(DATA_JINKORH, DONE);
-            }
-
-            DespawnCreaturesInArea(TRIGGER_FISSURE, me);
-            instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_LIGHTNING_STORM_DOT);
-            instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_THUNDERING_THROW_LIGHTNING_ANIMATION);
-
-            _JustDied();
-            Talk(JINROKH_DEATH);
-        }
-        void UpdateAI(const uint32 diff)
-        {
-            if (!UpdateVictim())
-                return;
-
-            events.Update(diff);
-
-            if (me->HasUnitState(UNIT_STATE_CASTING))
-                return;
-
-            switch (events.ExecuteEvent())
-            {
-            case EVENT_IONIZATION:
-            {
-                me->CastSpell(me->getVictim(), SPELL_IONIZATION_DUMMY);
-                /*
-                std::list<Player*> pl_list;
-                pl_list.clear();
-
-                me->GetPlayerListInGrid(pl_list, 300.0f);
-
-                if (pl_list.empty())
-                return;
-
-                pl_list.remove_if(RemoveIfTanks());
-
-                for (auto itr : pl_list)
+                if (instance)
                 {
-                me->CastSpell(itr, SPELL_IONIZATION_DUMMY, true);
-                }
-                */
-
-                events.ScheduleEvent(EVENT_IONIZATION, 90000);
-                break;
-            }
-            case EVENT_BERSERK:
-                me->CastSpell(me, 47008); // berserk
-                events.ScheduleEvent(EVENT_BERSERK, JINROKH_BERSERK_INTERVAL);
-                break;
-            case EVENT_SPELL_FOCUSED_LIGHTNING:
-                me->CastSpell(me, SPELL_FOCUSED_LIGHTNING_SUMMON);
-                events.ScheduleEvent(EVENT_SPELL_FOCUSED_LIGHTNING, 15000);
-                break;
-                /*
-                case EVENT_SPELL_FOCUSED_LIGHTNING_SUMMON:
-                SpellInfo const* spell = sSpellMgr->GetSpellInfo(SPELL_FOCUSED_LIGHTNING_SUMMON);
-                me->SummonCreature(TRIGGER_FOCUSED_LIGHTNING_ORB, spell->dest);
-                break;
-                */
-            case EVENT_SPEL_STATIC_BURST:
-                Talk(JINROKH_SPELL_4);
-
-                me->CastSpell(me, SPELL_STATIC_BURST);
-                events.ScheduleEvent(EVENT_SPEL_STATIC_BURST, JINROKH_SPELL_STATIC_BURST_INTERVAL);
-                events.ScheduleEvent(EVENT_SPELL_STATIC_WOUND, JINROKH_SPELL_STATIC_WOUND_INTERVAL);
-                break;
-            case EVENT_SPELL_STATIC_WOUND:
-                if (Unit* target = SelectTarget(SELECT_TARGET_TOPAGGRO, 0, 50.0f, true))
-                    me->CastSpell(target, SPELL_STATIC_WOUND);
-                break;
-            case EVENT_THUNDERING_THROW:
-                if (Unit* target = SelectTarget(SELECT_TARGET_TOPAGGRO, 0, 50.0f, true))
-                {
-                    me->CastSpell(target, SPELL_THUNDERING_THROW_DUMMY);
-                    target->SetDisableGravity(true);
-                    target->SetHover(true);
-                    target->GetMotionMaster()->MoveJump(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 5.0f, 6.0f);
+                    instance->SendEncounterUnit(ENCOUNTER_FRAME_ENGAGE, me);
+                    instance->SetData(DATA_JIN_ROKH_BREAKER_EVENT, IN_PROGRESS);
                 }
 
-                Talk(JINROKH_SPELL_2);
-                events.ScheduleEvent(EVENT_THUNDERING_THROW, JINROKH_THUNDERING_THROW_INTERVAL_2ND_HIT);
-                events.ScheduleEvent(EVENT_THUNDERING_THROW_JUMP_TARGET, 4000);
-                break;
-            case EVENT_THUNDERING_THROW_JUMP_TARGET:
-            {
-                if (target_throw = me->getVictim())
-                {
-                    target_throw->CastSpell(target_throw, 137370); // damage
-                    target_throw->AddAura(SPELL_THUNDERING_THROW_STUN, target_throw);
-                    target_throw->AddAura(SPELL_THUNDERING_THROW_BOSS_GRASPING_PLAYER, target_throw);
-                }
-                events.ScheduleEvent(EVENT_THUNDERING_THROW_JUMP_TARGET_2, 5000);
-                break;
+                _EnterCombat();
             }
-            case EVENT_THUNDERING_THROW_JUMP_TARGET_2:
+
+			void EnterEvadeMode()
             {
-                if (target_throw != NULL)
+                me->AddUnitState(UNIT_STATE_EVADE);
+
+                Map::PlayerList const &PlayerList = me->GetMap()->GetPlayers();
+                if (!PlayerList.isEmpty())
                 {
-                    if (Creature* trigger_statues = me->FindNearestCreature(TRIGGER_THUNDERING_THROWING, 300.0f, true))
+                    for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                     {
-                        trigger_statues->DespawnOrUnsummon(30000);
-
-                        if (target_throw && target_throw->IsInWorld())
+                        if (Player* player = i->getSource())
                         {
-                            target_throw->SetDisableGravity(false);
-                            target_throw->SetHover(false);
-                            target_throw->CastSpell(trigger_statues, SPELL_THUNDERING_THROW_JUMPING_TO_STATUE);
+                            player->RemoveAurasDueToSpell(SPELL_FOCUSED_LIGHTNING_FIX);
+                            player->RemoveAurasDueToSpell(SPELL_FLUIDITY);
+                            player->RemoveAurasDueToSpell(SPELL_CONDUCTIVE_WATER);
+                            player->RemoveAurasDueToSpell(SPELL_ELECTRIFIED_WATERS);
                         }
                     }
                 }
-                break;
-            }
-            case EVENT_LIGHTNING_STORM:
-                me->GetMotionMaster()->MoveJump(me->GetHomePosition().GetPositionX(), me->GetHomePosition().GetPositionY(), me->GetHomePosition().GetPositionZ(), 5.0f, 6.0f, me->GetOrientation());
 
-                Talk(JINROKH_SPELL_3);
+                DespawnSummon(NPC_FOCUSED_LIGHTNING);
+                DespawnSummon(NPC_LIGHTNING_FISSURE);
 
-                if (me->GetMap()->IsHeroic())
-                    me->m_Events.AddEvent(new jinrokh_lightning_strikes(me, 0), me->m_Events.CalculateTime(800));
+                me->RemoveAllAuras();
+                Reset();
+                me->DeleteThreatList();
+                me->CombatStop(true);
+                me->GetMotionMaster()->MovementExpired();
+                me->GetMotionMaster()->MoveTargetedHome();
 
-                me->CastSpell(me, SPELL_LIGHTNING_VISUAL);
-                me->CastSpell(me, SPELL_LIGHTNING_STORM);
+                if (instance)
+                {
+                    instance->SetData(DATA_JIN_ROKH_BREAKER_EVENT, FAIL);
+                    instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me); // Remove
+                }
 
-                events.ScheduleEvent(EVENT_LIGHTNING_STORM, JINROKH_EVENT_LIGHTNING_STORM_INTERVAL);
-                events.ScheduleEvent(EVENT_LIGHTNING_STORM_REMOVE_AURA, 16000); // spell duration from dbc
-                break;
-            case EVENT_LIGHTNING_STORM_REMOVE_AURA:
-                instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_LIGHTNING_STORM_DOT);
-                events.CancelEvent(EVENT_LIGHTNING_STRIKE);
-                me->m_Events.KillAllEvents(true);
-
-                DespawnCreaturesInArea(TRIGGER_LIGHTNING_STRIKE_STAR, me);
-                break;
+                _EnterEvadeMode();
             }
 
-            DoMeleeAttackIfReady();
+            void JustReachedHome()
+            {
+                me->ClearUnitState(UNIT_STATE_EVADE);
+
+                _JustReachedHome();
+            }
+
+            void JustSummoned(Creature* summon)
+            {
+                summons.Summon(summon);
+				summon->setActive(true);
+
+				if (me->isInCombat())
+					summon->SetInCombatWithZone();
+            }
+
+            void KilledUnit(Unit* victim)
+            {
+                if (victim->GetTypeId() == TYPEID_PLAYER)
+                    Talk(SAY_KILL);
+            }
+
+            void JustDied(Unit* killer)
+            {
+                Talk(SAY_DEATH);
+
+                Map::PlayerList const &PlayerList = me->GetMap()->GetPlayers();
+                if (!PlayerList.isEmpty())
+                {
+                    for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                    {
+                        if (Player* player = i->getSource())
+                        {
+                            player->RemoveAurasDueToSpell(SPELL_FOCUSED_LIGHTNING_FIX);
+                            player->RemoveAurasDueToSpell(SPELL_FLUIDITY);
+                            player->RemoveAurasDueToSpell(SPELL_CONDUCTIVE_WATER);
+                            player->RemoveAurasDueToSpell(SPELL_ELECTRIFIED_WATERS);
+                        }
+                    }
+                }
+
+                DespawnSummon(NPC_FOCUSED_LIGHTNING);
+                DespawnSummon(NPC_LIGHTNING_FISSURE);
+
+                summons.DespawnAll();
+                thunderingPlayer = NULL;
+
+                if (instance)
+                {
+                    instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
+                    instance->SetData(DATA_JIN_ROKH_BREAKER_EVENT, DONE);
+                }
+
+                _JustDied();
+            }
+
+            void DespawnSummon(uint32 entry)
+            {
+                std::list<Creature*> summonsList;
+                GetCreatureListWithEntryInGrid(summonsList, me, entry, 200.0f);
+                if (!summonsList.empty())
+                    for (std::list<Creature*>::iterator summs = summonsList.begin(); summs != summonsList.end(); summs++)
+                        (*summs)->DespawnOrUnsummon();
+            }
+
+            void UpdateAI(uint32 const diff)
+            {
+                if (!UpdateVictim() || !CheckInRoom() || me->HasUnitState(UNIT_STATE_CASTING))
+                    return;
+
+                if (instance && instance->IsWipe())
+                {
+                    EnterEvadeMode();
+                    return;
+                }
+
+                events.Update(diff);
+
+                while (uint32 eventId = events.ExecuteEvent())
+                {
+                    switch (eventId)
+                    {
+                        case EVENT_THUNDERING_THROW:
+                            Talk(SAY_THUNDERING_THROW);
+                            Talk(ANN_THUNDERING_THROW);
+                            if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 10.0f, true))
+                            {
+                                DoCast(target, SPELL_THUNDERING_THROW);
+                                thunderingPlayer = target;
+                            }
+				            events.ScheduleEvent(EVENT_THUNDERING_THROW_TOSS, TIMER_THUNDERING_THROW_TOSS);
+				            events.ScheduleEvent(EVENT_THUNDERING_THROW, TIMER_THUNDERING_THROW_S);
+                            break;
+
+                        case EVENT_THUNDERING_THROW_TOSS:
+                        {
+                            if (thunderingPlayer)
+                            {
+                                thunderingPlayer->RemoveAurasDueToSpell(SPELL_RIDE_VEHICLE);
+                                thunderingPlayer->RemoveAurasDueToSpell(SPELL_THUNDERING_THROW);
+                                thunderingPlayer->RemoveAurasDueToSpell(SPELL_THUNDERING_THROW_GRAB);
+                                if (me->HasAura(SPELL_RIDE_VEHICLE))
+                                    me->RemoveAurasDueToSpell(SPELL_RIDE_VEHICLE);
+                                // Get the statue trigger to perform the actions.
+                                std::list<Creature*> triggerList;
+                                GetCreatureListWithEntryInGrid(triggerList, me, NPC_STATUE_TRIGGER, 250.0f);
+                                if (!triggerList.empty())
+                                for (std::list<Creature*>::iterator statueTrigger = triggerList.begin(); statueTrigger != triggerList.end(); statueTrigger++)
+                                {
+                                    if ((*statueTrigger)->GetPositionX() == statueTriggerPlace[statueUsed].GetPositionX() && 
+                                        (*statueTrigger)->GetPositionY() == statueTriggerPlace[statueUsed].GetPositionY())
+                                    {
+                                        (*statueTrigger)->AI()->DoAction(ACTION_STATUE_WATER);
+                                        // Activate and "brake" statue.
+                                        if (GameObject* statue = me->FindNearestGameObject(GO_MOGU_FOUNTAIN_NW + statueUsed, 300.0f))
+                                            statue->SetGoState(GO_STATE_ACTIVE);
+                                        // Spell doesn't work. Throw player at statue.
+                                        thunderingPlayer->GetMotionMaster()->MoveJump(statueThrowPlace[statueUsed].GetPositionX(), statueThrowPlace[statueUsed].GetPositionY(), statueThrowPlace[statueUsed].GetPositionZ(), 25.0f, 25.0f);
+                                        // Summon Conductive Water (by position, not spell).
+                                        me->SummonCreature(NPC_CONDUCTIVE_WATER, waterSummonPlace[statueUsed], TEMPSUMMON_MANUAL_DESPAWN);
+                                        moguTrigger = (*statueTrigger);
+                                        // Select next statue.
+                                        if (statueUsed < 3)
+                                            statueUsed++;
+                                        else
+                                            statueUsed = 0;
+                                        break; // Break the loop.
+                                    }
+                                }
+                                events.ScheduleEvent(EVENT_THUNDERING_THROW_DMG, TIMER_THUNDERING_THROW_DMG);
+                            }
+                            break;
+                        }
+
+                        case EVENT_THUNDERING_THROW_DMG:
+                            if (thunderingPlayer && moguTrigger)
+                            {
+                                moguTrigger->CastSpell(thunderingPlayer, SPELL_THUNDERING_THROW_PLR, true);
+                                moguTrigger->CastSpell(thunderingPlayer, SPELL_THUNDERING_THROW_AOE, true);
+                                thunderingPlayer = NULL;
+                                moguTrigger      = NULL;
+                            }
+                            break;
+
+                        case EVENT_STATIC_BURST:
+                            Talk(SAY_STATIC_BURST);
+                            DoCastVictim(SPELL_STATIC_BURST);
+				            events.ScheduleEvent(EVENT_STATIC_BURST, TIMER_STATIC_BURST_S);
+                            break;
+
+                        case EVENT_FOCUSED_LIGHTNING:
+                            Talk(SAY_FOCUSED_LIGHTNING);
+                            DoCast(me, SPELL_FOCUSED_LIGHTNING);
+				            events.ScheduleEvent(EVENT_FOCUSED_LIGHTNING, TIMER_FOCUSED_LIGHTNING_S);
+                            break;
+
+                        case EVENT_LIGHTNING_STORM_JUMP:
+                            Talk(SAY_LIGHTNING_STORM);
+                            Talk(ANN_LIGHTNING_STORM);
+                            me->GetMotionMaster()->MoveJump(middlePos.GetPositionX(), middlePos.GetPositionY(), middlePos.GetPositionZ(), 15.0f, 15.0f);
+				            events.ScheduleEvent(EVENT_LIGHTNING_STORM, TIMER_LIGHTNING_STORM);
+				            events.ScheduleEvent(EVENT_LIGHTNING_STORM_JUMP, TIMER_LIGHTNING_STORM_JUMPS);
+                            break;
+
+                        case EVENT_LIGHTNING_STORM:
+                        {
+                            // Remove Pouring Water visual from triggers.
+                            std::list<Creature*> triggerList;
+                            GetCreatureListWithEntryInGrid(triggerList, me, NPC_STATUE_TRIGGER, 200.0f);
+                            if (!triggerList.empty())
+                            for (std::list<Creature*>::iterator statueTrigger = triggerList.begin(); statueTrigger != triggerList.end(); statueTrigger++)
+                                if ((*statueTrigger)->HasAura(SPELL_CONDUCTIVE_VISUAL_2))
+                                    (*statueTrigger)->RemoveAurasDueToSpell(SPELL_CONDUCTIVE_VISUAL_2);
+                            // Remove Conductive Water visual from the npc's and add the Electrified one.
+                            std::list<Creature*> waterList;
+                            GetCreatureListWithEntryInGrid(waterList, me, NPC_CONDUCTIVE_WATER, 200.0f);
+                            if (!waterList.empty())
+                            for (std::list<Creature*>::iterator water = waterList.begin(); water != waterList.end(); water++)
+                            {
+                                if ((*water)->HasAura(SPELL_CONDUCTIVE_VISUAL))
+                                {
+                                    (*water)->RemoveAurasDueToSpell(SPELL_CONDUCTIVE_VISUAL);
+                                    (*water)->AddAura(SPELL_CONDUCTIVE_VISUAL_3, (*water));
+                                }
+                            }
+                            me->AddAura(SPELL_LIGHTNING_STORM_VIS, me);
+                            if (AuraPtr visual = me->GetAura(SPELL_LIGHTNING_STORM_VIS))
+                                visual->SetMaxDuration(15000);
+                            me->AddAura(SPELL_LIGHTNING_STORM_VIS2, me);
+                            if (AuraPtr visual2 = me->GetAura(SPELL_LIGHTNING_STORM_VIS2))
+                                visual2->SetMaxDuration(15000);
+                            DoCast(me, SPELL_LIGHTNING_STORM);
+                            break;
+                        }
+
+                        case EVENT_IONIZATION:
+                        {
+                            Map::PlayerList const &PlayerList = me->GetMap()->GetPlayers();
+                            if (!PlayerList.isEmpty())
+                                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                                    if (Player* player = i->getSource())
+                                        if (player->GetRoleForGroup(player->GetSpecializationId(player->GetActiveSpec())) != ROLES_TANK)
+                                            me->AddAura(SPELL_IONIZATION_AURA, player);
+                            events.ScheduleEvent(EVENT_IONIZATION, TIMER_IONIZATION_S);
+                            break;
+                        }
+
+                        case EVENT_BERSERK:
+                            Talk(SAY_BERSERK);
+				            DoCast(me, SPELL_BERSERK);
+                            break;
+
+                        default: break;
+                    }
+                }
+
+                DoMeleeAttackIfReady();
+            }
+        };
+
+        CreatureAI* GetAI(Creature* creature) const
+        {
+            return new boss_jin_rokh_breakerAI(creature);
         }
-    };
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new boss_jinkorhAI(creature);
-    }
 };
-class npc_focused_lightning_orb : public CreatureScript
+
+class npc_mogu_statue_trigger : public CreatureScript
 {
-public:
-    npc_focused_lightning_orb() : CreatureScript("npc_focused_lightning_orb") { }
+    public:
+        npc_mogu_statue_trigger() : CreatureScript("npc_mogu_statue_trigger") { }
 
-    struct npc_focused_lightning_orbAI : public ScriptedAI
-    {
-        InstanceScript* pInstance;
-        //
-        npc_focused_lightning_orbAI(Creature* creature) : ScriptedAI(creature)
+        struct npc_mogu_statue_trigger_AI : public ScriptedAI
         {
-            pInstance = creature->GetInstanceScript();
-        }
-        Player* target = NULL;
-        int32 orbtick;
-        int32 speedstack;
+            npc_mogu_statue_trigger_AI(Creature* creature) : ScriptedAI(creature) { }
 
-        void Reset()
-        {
-            orbtick = 500;
-            speedstack = 6000;
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
-            me->CastSpell(me, SPELL_FOCUSED_LIGHTNING_VISUAL, true);
-            me->setFaction(16);
-            me->SetHealth(6000000);
-
-            target = me->FindNearestPlayer(200.0f, true);
-        }
-        void MoveInLineOfSight(Unit* who)
-        {
-            if (who && who->IsInWorld() && who->GetTypeId() == TYPEID_PLAYER && who->IsWithinDistInMap(me, 2.0f)) // Player
+            void IsSummonedBy(Unit* /*summoner*/)
             {
-                me->CastSpell(who, SPELL_FOCUSED_LIGHTNING_UNKNOWN_DAMAGE);
-                me->CastSpell(me, SPELL_LIGHTNING_FISSURE_SUMMON);
+                Reset();
+            }
 
-                if (Creature* water = me->FindNearestCreature(TRIGGER_WATER, 10.0f, true))
+            void Reset()
+            {
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_DISABLE_MOVE);
+                me->SetReactState(REACT_PASSIVE);
+            }
+
+            void DoAction(int32 const action)
+            {
+                switch (action)
                 {
-                    water->AddAura(SPELL_CONDUCTIVE_WATER_ELECTERT_VISUAL, water);
-                    water->RemoveAura(SPELL_CONDUCTIVE_WATER_VISUAL);
+                    case ACTION_STATUE_WATER:
+                        me->AddAura(SPELL_CONDUCTIVE_VISUAL_2, me);
+                        break;
 
+                    default: break;
                 }
-                me->DespawnOrUnsummon();
-                // i think it's handled autoamtically from dmg increase of fludity               
-            }
-            else if (who && who->IsInWorld() && who->GetEntry() == TRIGGER_FISSURE && who->IsWithinDistInMap(me, 2.0f)) // FISSURE
+            };
+
+            void JustSummoned(Creature* summon)
             {
-                me->CastSpell(who, SPELL_LIGHTNING_FISSURE_IMPLOSION_ORB_CONTACT);
-                me->DespawnOrUnsummon();
+				summon->setActive(true);
+
+				if (me->isInCombat())
+					summon->SetInCombatWithZone();
             }
-        }
-        void UpdateAI(uint32 const diff)
+
+            void UpdateAI(uint32 const diff) { }
+        };
+
+        CreatureAI* GetAI(Creature* creature) const
         {
-            // follow
-            if (target && target->IsInWorld())
-            {
-                if (!me->isMoving())
-                {
-                    me->GetMotionMaster()->MovePoint(1, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ());
-                }
-            }
-
-            if (orbtick <= diff)
-            {
-                std::list<Player*> list_players;
-                me->GetPlayerListInGrid(list_players, 300.0f);
-
-                for (auto itr : list_players)
-                {
-                    itr->CastSpell(itr, SPELL_FOCUSED_LIGHTNING_ORB_TICK);
-                }
-                orbtick = 500;
-            }
-            else
-                orbtick -= diff;
-
-            if (speedstack <= diff)
-            {
-                speedstack = 6000;
-                me->SetSpeed(MOVE_RUN, me->GetSpeed(MOVE_RUN) + 0.1, true);
-            }
-            else speedstack -= diff;
+            return new npc_mogu_statue_trigger_AI(creature);
         }
-    };
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_focused_lightning_orbAI(creature);
-    }
 };
-/*
-class spell_focused_lightning_detonated_water : public SpellScriptLoader
-{
-public:
-spell_focused_lightning_detonated_water() : SpellScriptLoader("spell_focused_lightning_detonated_water") { }
 
-class spell_scholomance_spells_damage_Sp : public SpellScript
+class npc_conductive_water : public CreatureScript
 {
-PrepareSpellScript(spell_scholomance_spells_damage_Sp);
+    public:
+        npc_conductive_water() : CreatureScript("npc_conductive_water") { }
 
-void HandleDamage(SpellEffIndex /*effIndex)
-{
-if (!GetCaster() || !GetHitUnit())
-return;
-
-if (GetHitUnit()->HasAura(SPELL_FLUDITIY))
-{
-SetHitDamage(GetHitUnit()->GetMaxHealth());
-}
-}
-
-void Register()
-{
-OnEffectHitTarget += SpellEffectFn(spell_scholomance_spells_damage_Sp::HandleDamage, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
-}
-
-};
-SpellScript* GetSpellScript() const
-{
-return new spell_scholomance_spells_damage_Sp();
-}
-};
-*/
-class npc_trigger_statue : public CreatureScript
-{
-public:
-    npc_trigger_statue() : CreatureScript("npc_trigger_statue") { }
-
-    struct npc_trigger_statueAI : public CreatureAI
-    {
-        npc_trigger_statueAI(Creature* creature) : CreatureAI(creature)
+        struct npc_conductive_water_AI : public ScriptedAI
         {
+            npc_conductive_water_AI(Creature* creature) : ScriptedAI(creature) { }
 
-        }
-        InstanceScript* pInstance;
-        Creature* target = NULL;
-        Player* playerwho = NULL;
-        int32 throwingexplosion;
-        int32 watersprout;
+            EventMap events;
+            float waterRadius; // used to determine the current radius of the Conductive Water. May grow to 11 scale * 4 = 44 yards.
 
-
-        void MoveInLineOfSight(Unit* who)
-        {
-            if (who && who->IsInWorld() && who->GetTypeId() == TYPEID_PLAYER && who->IsWithinDistInMap(me, 10.0f)) // Player
+            void IsSummonedBy(Unit* /*summoner*/)
             {
-                if (target = me->FindNearestCreature(TRIGGER_THUNDERING_EXPLODE, 200.0f, true))
-                {
-                    who->GetMotionMaster()->MoveJump(target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 15.0f, 8.0f);
-                    //who->CastSpell(target, SPELL_THUNDERING_THROW_JUMPING_FROM_STATUE);
-                }
-                throwingexplosion = 4000;
-
-                playerwho = who->ToPlayer();
-            }
-        }
-        void UpdateAI(uint32 const diff)
-        {
-            if (InstanceScript* instance = me->GetInstanceScript())
-            {
-                if (Creature* Jinrokh = instance->instance->GetCreature(instance->GetData64(DATA_JINKORH)))
-                {
-                    me->SetFacingToObject(Jinrokh);
-                }
+                Reset();
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_DISABLE_MOVE);
+                me->AddAura(SPELL_CONDUCTIVE_VISUAL, me);
+                me->AddAura(SPELL_CONDUCTIVE_WATER_GROW, me);
+                me->SetReactState(REACT_PASSIVE);
+                waterRadius = me->GetObjectScale() * 4.0f; // 4 yards original radius.
             }
 
-            if (throwingexplosion <= diff)
+            void Reset()
             {
-                if (target != NULL)
-                {
-                    playerwho->CastSpell(target, SPELL_THUNDERING_THROW_PLAYER_HIT_GROUND);
-                    target->SummonCreature(TRIGGER_WATER, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN);
-                    me->CastSpell(target, SPELL_CONDUTIVE_WATER_LIGHTNING_VISUAL);
-                    me->CastSpell(me, SPELL_WATER_SPROUT_VISUAL);
+                events.Reset();
+                events.ScheduleEvent(EVENT_BUFF_DEBUFF, TIMER_BUFF_DEBUFF);
+            }
 
-                    target = NULL;
+            void UpdateAI(uint32 const diff)
+            {
+                events.Update(diff);
+
+                while(uint32 eventId = events.ExecuteEvent())
+                {
+                    switch(eventId)
+                    {
+                        case EVENT_BUFF_DEBUFF:
+                        {
+                            // Check the scale.
+                            waterRadius = me->GetObjectScale() * 4.0f; // Scale is adjusted by spell.
+                            // Add the auras to the players in the water.
+                            Map::PlayerList const &PlayerList = me->GetMap()->GetPlayers();
+                            if (!PlayerList.isEmpty())
+                            {
+                                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                                {
+                                    if (Player* player = i->getSource())
+                                    {
+                                        if (player->IsWithinDistInMap(me, waterRadius))
+                                        {
+                                            me->AddAura(SPELL_CONDUCTIVE_WATER, player);
+                                            // Add Fluidity or Electrified Waters depending on the visual.
+                                            if (me->HasAura(SPELL_CONDUCTIVE_VISUAL))
+                                                me->AddAura(SPELL_FLUIDITY, player);
+                                            else if (me->HasAura(SPELL_CONDUCTIVE_VISUAL_3))
+                                                me->AddAura(SPELL_ELECTRIFIED_WATERS, player);
+                                        }
+                                        else
+                                        {
+                                            if (player->HasAura(SPELL_CONDUCTIVE_WATER, me->GetGUID()))
+                                                player->RemoveAurasDueToSpell(SPELL_CONDUCTIVE_WATER, me->GetGUID());
+                                            if (player->HasAura(SPELL_FLUIDITY, me->GetGUID()))
+                                                player->RemoveAurasDueToSpell(SPELL_FLUIDITY, me->GetGUID());
+                                            if (player->HasAura(SPELL_ELECTRIFIED_WATERS, me->GetGUID()))
+                                                player->RemoveAurasDueToSpell(SPELL_ELECTRIFIED_WATERS, me->GetGUID());
+                                        }
+                                    }
+                                }
+                            }
+                            events.ScheduleEvent(EVENT_BUFF_DEBUFF, TIMER_BUFF_DEBUFF);
+                            break;
+                        }
+
+                        default: break;
+                    }
                 }
             }
-            else
-                throwingexplosion -= diff;
-        }
-    };
+        };
 
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_trigger_statueAI(creature);
-    }
+        CreatureAI* GetAI(Creature* creature) const
+        {
+            return new npc_conductive_water_AI(creature);
+        }
 };
+
+class npc_focused_lightning : public CreatureScript
+{
+    public:
+        npc_focused_lightning() : CreatureScript("npc_focused_lightning") { }
+
+        struct npc_focused_lightningAI : public ScriptedAI
+        {
+            npc_focused_lightningAI(Creature* creature) : ScriptedAI(creature) { }
+
+            EventMap events;
+            Unit* playerTarget;
+            bool exploded;
+
+            void IsSummonedBy(Unit* summoner)
+            {
+                Reset();
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+                // me->AddAura(SPELL_FOCUSED_LIGHTNING_SPD, me);
+                me->AddAura(SPELL_FOCUSED_LIGHTNING_VIS, me);
+                me->SetReactState(REACT_PASSIVE);
+
+                if (!playerTarget)
+                {
+                    if (Unit* target = SelectTarget(SELECT_TARGET_FARTHEST, 0, 150.0f, true))
+                    {
+                        summoner->ToCreature()->AI()->Talk(ANN_FOCUSED_LIGHTNING, target->GetGUID());
+                        target->AddAura(SPELL_FOCUSED_LIGHTNING_FIX, target);
+                        me->Attack(target, false);
+                        me->GetMotionMaster()->MoveChase(target);
+                        playerTarget = target;
+                    }
+                }
+
+                events.ScheduleEvent(EVENT_FOCUSED_LIGHTNING_DMG, TIMER_FOCUSED_LIGHTNING_DMG);
+            }
+
+            void Reset()
+            {
+                playerTarget = NULL;
+                exploded = false;
+
+                events.Reset();
+            }
+
+            void JustSummoned(Creature* summon)
+            {
+				summon->setActive(true);
+
+				if (me->isInCombat())
+					summon->SetInCombatWithZone();
+            }
+
+            void UpdateAI(uint32 const diff)
+            {
+                // Check for player in range for normal Detonation.
+                if (!exploded && playerTarget)
+                {
+                    if (playerTarget->IsWithinDistInMap(me, 2.0f))
+                    {
+                        playerTarget->RemoveAurasDueToSpell(SPELL_FOCUSED_LIGHTNING_FIX);
+                        me->CastSpell(playerTarget, SPELL_FOCUSED_LIGHTNING_DET, true);
+                        me->SummonCreature(NPC_LIGHTNING_FISSURE, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0, TEMPSUMMON_MANUAL_DESPAWN);
+                        me->DespawnOrUnsummon(200);
+                        exploded = true;
+                    }
+                }
+
+                // Check for Electrified Waters near for Violent Detonation.
+                if (!exploded)
+                {
+                    if (Creature* water = me->FindNearestCreature(NPC_CONDUCTIVE_WATER, 44.0f, true))
+                    {
+                        if (water->HasAura(SPELL_CONDUCTIVE_VISUAL_3))
+                        {
+                            if (me->IsWithinDistInMap(water, CAST_AI(npc_conductive_water::npc_conductive_water_AI, water->ToCreature()->AI())->waterRadius))
+                            {
+                                DoCast(me, SPELL_FL_VIOLENT_DETONATION);
+                                me->DespawnOrUnsummon(200);
+                                exploded = true;
+                            }
+                        }
+                    }
+                }
+
+                events.Update(diff);
+
+                while (uint32 eventId = events.ExecuteEvent())
+                {
+                    switch (eventId)
+                    {
+                        case EVENT_FOCUSED_LIGHTNING_DMG:
+                            DoCast(me, SPELL_FOCUSED_LIGHTNING_DMG);
+                            events.ScheduleEvent(EVENT_FOCUSED_LIGHTNING_DMG, TIMER_FOCUSED_LIGHTNING_DMG);
+                            break;
+                    }
+                }
+            }
+        };
+
+        CreatureAI* GetAI(Creature* creature) const
+        {
+            return new npc_focused_lightningAI(creature);
+        }
+};
+
 class npc_lightning_fissure : public CreatureScript
 {
-public:
-    npc_lightning_fissure() : CreatureScript("npc_lightning_fissure") { }
+    public:
+        npc_lightning_fissure() : CreatureScript("npc_lightning_fissure") { }
 
-    struct npc_lightning_fissureAI : public Scripted_NoMovementAI
-    {
-        InstanceScript* pInstance;
-
-        npc_lightning_fissureAI(Creature* creature) : Scripted_NoMovementAI(creature)
+        struct npc_lightning_fissureAI : public ScriptedAI
         {
-            pInstance = creature->GetInstanceScript();
-            creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
+            npc_lightning_fissureAI(Creature* creature) : ScriptedAI(creature) { }
 
-            creature->CastSpell(creature, SPELL_LIGHTNING_FISSURE_EFFECTIVE_AURA);
-            creature->setFaction(16);
-        }
+            EventMap events;
+            bool casted;
 
-        int tick;
-        void Reset()
-        {
-            tick = 500;
-        }
-        void UpdateAI(uint32 const diff)
-        {
-            if (tick <= diff)
+            void IsSummonedBy(Unit* /*summoner*/)
             {
-                std::list<Player*> list_players;
-                me->GetPlayerListInGrid(list_players, 3.0f);
+                Reset();
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+                me->AddAura(SPELL_LIGHTNING_FISSURE_VIS, me);
+                me->AddAura(SPELL_LIGHTNING_FISSURE_DMG, me);
+                me->SetSpeed(MOVE_RUN, 1.1f);
+                me->SetSpeed(MOVE_WALK, 1.2f);
+                me->GetMotionMaster()->MoveRandom(50.0f);
+                me->SetReactState(REACT_PASSIVE);
+                events.ScheduleEvent(EVENT_FISSURE_SEARCH, 1000);
+            }
 
-                for (auto itr : list_players)
+            void Reset()
+            {
+                events.Reset();
+                casted = false;
+            }
+
+            void UpdateAI(uint32 const diff)
+            {
+                events.Update(diff);
+
+                while (uint32 eventId = events.ExecuteEvent())
                 {
-                    itr->CastSpell(itr, SPELL_LIGHTNING_FISSURE_CLOSE_YARD_TICK_UNKNOWN);
-                }
-                tick = 500;
-            }
-            else
-                tick -= diff;
-        }
-    };
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_lightning_fissureAI(creature);
-    }
-};
-class npc_corrupted_water : public CreatureScript
-{
-public:
-    npc_corrupted_water() : CreatureScript("npc_corrupted_water") { }
-
-    struct npc_corrupted_waterAI : public Scripted_NoMovementAI
-    {
-        InstanceScript* pInstance;
-
-        npc_corrupted_waterAI(Creature* creature) : Scripted_NoMovementAI(creature)
-        {
-            pInstance = creature->GetInstanceScript();
-            creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
-            creature->CastSpell(creature, SPELL_CONDUCTIVE_WATER_VISUAL);
-            creature->setFaction(16);
-        }
-        int32 sizetimer;
-        int32 maxsize;
-
-        void Reset()
-        {
-            sizetimer = 2000;
-            maxsize = 0;
-        }
-        void UpdateAI(uint32 const diff)
-        {
-            if (sizetimer <= diff)
-            {
-                if (maxsize < 25)
-                {
-                    me->CastSpell(me, SPELL_CONDUCTIVE_WATER_SIZE);
-                    sizetimer = 2000;
-
-                    maxsize++;
-                }
-            }
-            else
-                sizetimer -= diff;
-
-            if (!me->HasAura(SPELL_CONDUCTIVE_WATER_ELECTERT_VISUAL))
-            {
-                // loads / farts from list;
-                std::list<Player*> playerlist;
-
-                float scale = me->GetFloatValue(OBJECT_FIELD_SCALE_X);
-
-                JadeCore::AnyPlayerInObjectRangeCheck u_check(me, scale, true);
-                JadeCore::PlayerListSearcher<JadeCore::AnyPlayerInObjectRangeCheck> searcher(me, playerlist, u_check);
-                me->VisitNearbyObject(scale, searcher);
-
-                for (std::list<Player*>::const_iterator itr = playerlist.begin(); itr != playerlist.end(); itr++)
-                {
-                    if (!(*itr)->HasAura(SPELL_FLUDITIY))
-                        (*itr)->AddAura(SPELL_FLUDITIY, (*itr));
-                }
-            }
-            else
-            {
-                // loads / farts from list;
-                std::list<Player*> playerlist;
-
-                float scale = me->GetFloatValue(OBJECT_FIELD_SCALE_X);
-
-                JadeCore::AnyPlayerInObjectRangeCheck u_check(me, scale, true);
-                JadeCore::PlayerListSearcher<JadeCore::AnyPlayerInObjectRangeCheck> searcher(me, playerlist, u_check);
-                me->VisitNearbyObject(scale, searcher);
-
-                for (std::list<Player*>::const_iterator itr = playerlist.begin(); itr != playerlist.end(); itr++)
-                {
-                    if (!(*itr)->HasAura(SPELL_FLUDITIY))
-                        (*itr)->AddAura(SPELL_ELECTRIFYING_WATER, (*itr));
-                }
-            }
-        }
-    };
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_corrupted_waterAI(creature);
-    }
-};
-
-class spell_cast_dot_lightning_storm : public SpellScriptLoader
-{
-public:
-    spell_cast_dot_lightning_storm() : SpellScriptLoader("spell_cast_dot_lightning_storm") { }
-
-    class spell_cast_dot_lightning_storm_AuraScript : public AuraScript
-    {
-        PrepareAuraScript(spell_cast_dot_lightning_storm_AuraScript);
-
-        void HandlePeriodic(constAuraEffectPtr /*aurEff*/)
-        {
-            PreventDefaultAction();
-
-            std::list<Player*> listplayer;
-
-            GetCaster()->GetPlayerListInGrid(listplayer, 300.0f);
-
-            if (listplayer.empty())
-                return;
-
-            for (auto itr : listplayer)
-            {
-                itr->AddAura(SPELL_LIGHTNING_STORM_DOT, itr);
-            }
-
-            // Turn water into electerified waters
-            std::list<Creature*> listcreatures;
-            GetCaster()->GetCreatureListWithEntryInGrid(listcreatures, TRIGGER_WATER, 300.0f);
-
-            if (listcreatures.empty())
-                return;
-
-            for (auto itr : listcreatures)
-            {
-                if (!itr->HasAura(SPELL_CONDUCTIVE_WATER_ELECTERT_VISUAL))
-                {
-                    itr->AddAura(SPELL_CONDUCTIVE_WATER_ELECTERT_VISUAL, itr);
-                    itr->RemoveAura(SPELL_CONDUCTIVE_WATER_VISUAL);
-                }
-            }
-        }
-        void Register()
-        {
-            OnEffectPeriodic += AuraEffectPeriodicFn(spell_cast_dot_lightning_storm_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL);
-        }
-    };
-
-    AuraScript* GetAuraScript() const
-    {
-        return new spell_cast_dot_lightning_storm_AuraScript();
-    }
-};
-
-class spell_remove_thunder_strike_damage : public SpellScriptLoader
-{
-public:
-    spell_remove_thunder_strike_damage() : SpellScriptLoader("spell_remove_thunder_strike_damage") { }
-
-    class spell_remove_thunder_strike_damage_SpellScript : public SpellScript
-    {
-        PrepareSpellScript(spell_remove_thunder_strike_damage_SpellScript);
-
-        void RemoveInvalidTargets(std::list<WorldObject*>& targets)
-        {
-            targets.remove(GetCaster());
-        }
-
-        void Register()
-        {
-            OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_remove_thunder_strike_damage_SpellScript::RemoveInvalidTargets, EFFECT_0, 25);
-        }
-    };
-
-    SpellScript* GetSpellScript() const
-    {
-        return new spell_remove_thunder_strike_damage_SpellScript();
-    }
-};
-class spell_lightning_storm_dot : public SpellScriptLoader
-{
-public:
-    spell_lightning_storm_dot() : SpellScriptLoader("spell_lightning_storm_dot") { }
-
-    class spell_lightning_storm_dot_SpellScript : public SpellScript
-    {
-        PrepareSpellScript(spell_lightning_storm_dot_SpellScript);
-
-        void HandleOnHit()
-        {
-            if (GetCaster() && GetHitUnit())
-                SetHitDamage(15000);
-        }
-
-        void Register()
-        {
-
-            OnHit += SpellHitFn(spell_lightning_storm_dot_SpellScript::HandleOnHit);
-        }
-    };
-
-    SpellScript* GetSpellScript() const
-    {
-        return new spell_lightning_storm_dot_SpellScript();
-    }
-};
-class npc_lightning_strike_pillar : public CreatureScript
-{
-public:
-    npc_lightning_strike_pillar() : CreatureScript("npc_lightning_strike_pillar") { }
-
-    struct npc_lightning_strike_pillarAI : public Scripted_NoMovementAI
-    {
-        InstanceScript* pInstance;
-        //
-        npc_lightning_strike_pillarAI(Creature* creature) : Scripted_NoMovementAI(creature)
-        {
-            pInstance = creature->GetInstanceScript();
-        }
-        int32 orbtick;
-        bool activated;
-
-        void Reset()
-        {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
-            me->setFaction(16);
-            me->SetHealth(6000000);
-            orbtick = 6000000;
-            activated = false;
-        }
-        void DoAction(const int32 action)
-        {
-            switch (action)
-            {
-            case ACTION_TRIGGER_PILLAR:
-                activated = true;
-                orbtick = 3000;
-                me->CastSpell(me, SPELL_LIGHNING_STRIKE_VISUAL, false);
-                break;
-            }
-        }
-        void UpdateAI(uint32 const diff)
-        {
-            if (activated)
-            {
-                if (orbtick <= diff)
-                {
-                    std::list<Player*> list_players;
-                    me->GetPlayerListInGrid(list_players, 4.0f);
-
-                    for (auto itr : list_players)
+                    switch (eventId)
                     {
-                        itr->EnvironmentalDamage(DAMAGE_FIRE, 90000);
-                        //itr->CastSpell(itr, SPELL_FOCUSED_LIGHTNING_ORB_TICK);
+                        case EVENT_FISSURE_SEARCH:
+                            if (!casted && me->FindNearestCreature(NPC_FOCUSED_LIGHTNING, 3.0f, true))
+                            {
+                                me->CastSpell(me, SPELL_IMPLOSION, true);
+                                me->DespawnOrUnsummon(200);
+                                casted = true;
+                            }
+                            events.ScheduleEvent(EVENT_FISSURE_SEARCH, 300);
+                            break;
                     }
-
-                    for (int i = 0; i < 5; i++)
-                    {
-                        me->SummonCreature(TRIGGER_LIGHTNING_STRIKE_STAR, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 15000);
-                    }
-
-                    me->DespawnOrUnsummon(0);
-                    me->Respawn();
-                    me->AI()->Reset();
                 }
-                else
-                    orbtick -= diff;
             }
-        }
-    };
+        };
 
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_lightning_strike_pillarAI(creature);
-    }
-};
-class npc_lightning_star : public CreatureScript
-{
-public:
-    npc_lightning_star() : CreatureScript("npc_lightning_star") { }
-
-    struct npc_lightning_starAI : public ScriptedAI
-    {
-        InstanceScript* pInstance;
-        //
-        npc_lightning_starAI(Creature* creature) : ScriptedAI(creature)
+        CreatureAI* GetAI(Creature* creature) const
         {
-            pInstance = creature->GetInstanceScript();
+            return new npc_lightning_fissureAI(creature);
         }
-        int32 orbtick;
-        int32 moverandom;
-
-        void Reset()
-        {
-            orbtick = 2000;
-            moverandom = 0;
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
-            me->setFaction(16);
-            me->SetHealth(6000000);
-            me->SetReactState(REACT_PASSIVE);
-            me->CastSpell(me, SPELL_LIGHTNING_STRIKE_ADD_VISUAL);
-            me->SetObjectScale(0.5f);
-        }
-        void UpdateAI(uint32 const diff)
-        {
-            if (orbtick <= diff)
-            {
-                std::list<Player*> list_players;
-                me->GetPlayerListInGrid(list_players, 1.2f);
-
-                for (auto itr : list_players)
-                {
-                    itr->EnvironmentalDamage(DAMAGE_FIRE, 24000);
-                }
-                orbtick = 2000;
-            }
-            else
-                orbtick -= diff;
-
-            if (moverandom <= diff)
-            {
-                me->SetSpeed(MOVE_RUN, 14.0f, true);
-                me->GetMotionMaster()->MoveRandom(60.0f);
-                moverandom = 6000;
-            }
-            else
-                moverandom -= diff;
-        }
-    };
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_lightning_starAI(creature);
-    }
 };
 
-class spell_ionization_removal : public SpellScriptLoader
+// Thundering Throw (main cast spell) - 137180
+class spell_thundering_throw : public SpellScriptLoader
 {
-public:
-    spell_ionization_removal() : SpellScriptLoader("spell_ionization_removal") { }
+    public:
+        spell_thundering_throw() : SpellScriptLoader("spell_thundering_throw") { }
 
-    class spell_ionization_removalAuraScript : public AuraScript
-    {
-        PrepareAuraScript(spell_ionization_removalAuraScript);
-
-        void OnRemove(constAuraEffectPtr /*aurEff*/, AuraEffectHandleModes /*mode*/)
+        class spell_thundering_throw_SpellScript : public SpellScript
         {
-            if (Unit* caster = GetCaster())
+            PrepareSpellScript(spell_thundering_throw_SpellScript);
+
+            void HandleDummy(SpellEffIndex /*effIndex*/)
             {
-                if (GetTarget()->GetTypeId() == TYPEID_PLAYER)
+                Unit* caster = GetCaster();
+                Unit* target = GetHitUnit();
+
+                if (!caster || !target)
+                    return;
+
+                caster->CastSpell(target, SPELL_THUNDERING_THROW_GRAB, true);
+            }
+
+            void Register()
+            {
+                OnEffectHitTarget += SpellEffectFn(spell_thundering_throw_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_thundering_throw_SpellScript();
+        }
+};
+
+// Thundering Throw (vehicle grab spell) - 137161
+class spell_thundering_throw_grab : public SpellScriptLoader
+{
+    public:
+        spell_thundering_throw_grab() : SpellScriptLoader("spell_thundering_throw_grab") { }
+
+        class spell_thundering_throw_grab_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_thundering_throw_grab_SpellScript);
+
+            void HandleScript(SpellEffIndex /*effIndex*/)
+            {
+                Unit* caster = GetCaster();
+                Unit* target = GetHitUnit();
+
+                if (!caster || !target)
+                    return;
+
+                target->CastSpell(caster, SPELL_RIDE_VEHICLE, true);
+            }
+
+            void Register()
+            {
+                OnEffectHitTarget += SpellEffectFn(spell_thundering_throw_grab_SpellScript::HandleScript, EFFECT_0, SPELL_EFFECT_SCRIPT_EFFECT);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_thundering_throw_grab_SpellScript();
+        }
+};
+
+// Thundering Throw (AOE) - 137167
+class spell_thundering_throw_aoe : public SpellScriptLoader
+{
+    public:
+        spell_thundering_throw_aoe() : SpellScriptLoader("spell_thundering_throw_aoe") { }
+
+        class spell_thundering_throw_aoe_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_thundering_throw_aoe_SpellScript);
+
+            void HandleHit(SpellEffIndex /*effIndex*/)
+            {
+                Unit* caster = GetCaster();
+                Unit* target = GetHitUnit();
+
+                if (!caster || !target)
+                    return;
+
+                if (target = CAST_AI(boss_jin_rokh_breaker::boss_jin_rokh_breakerAI, GetCaster()->ToCreature()->AI())->thunderingPlayer)
+                    return;
+
+                caster->AddAura(SPELL_THUNDERING_THROW_STUN, target);
+            }
+
+            void CalculateDamage(SpellEffIndex /*effIndex*/)
+            {
+                Unit* caster = GetCaster();
+                Unit* target = GetHitUnit();
+
+                if (!caster || !target)
+                    return;
+
+                if (target = CAST_AI(boss_jin_rokh_breaker::boss_jin_rokh_breakerAI, GetCaster()->ToCreature()->AI())->thunderingPlayer)
+                    SetHitDamage(0);
+            }
+
+            void Register()
+            {
+                OnEffectHitTarget += SpellEffectFn(spell_thundering_throw_aoe_SpellScript::HandleHit, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+                OnEffectHitTarget += SpellEffectFn(spell_thundering_throw_aoe_SpellScript::CalculateDamage, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_thundering_throw_aoe_SpellScript();
+        }
+};
+
+// Static Burst 137162.
+class spell_static_burst : public SpellScriptLoader
+{
+    public:
+        spell_static_burst() : SpellScriptLoader("spell_static_burst") { }
+
+        class spell_static_burst_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_static_burst_AuraScript);
+
+            void OnRemove(constAuraEffectPtr /*aurEff*/, AuraEffectHandleModes /*mode*/)
+            {
+                Unit* caster = GetCaster();
+
+                if (!caster || !caster->getVictim())
+                    return;
+
+                caster->CastCustomSpell(SPELL_STATIC_WOUND, SPELLVALUE_AURA_STACK, 10, caster->getVictim());
+            }
+
+            void Register()
+            {
+                OnEffectRemove += AuraEffectRemoveFn(spell_static_burst_AuraScript::OnRemove, EFFECT_1, SPELL_AURA_PERIODIC_DUMMY, AURA_EFFECT_HANDLE_REAL);
+            }
+        };
+
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_static_burst_AuraScript();
+        }
+};
+
+// Static Wound 138349.
+class spell_static_wound : public SpellScriptLoader
+{
+    public:
+        spell_static_wound() : SpellScriptLoader("spell_static_wound") { }
+
+        class spell_static_wound_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_static_wound_AuraScript)
+
+            void OnPeriodic(constAuraEffectPtr /*aurEff*/)
+            {
+                Unit* caster = GetCaster();
+                Unit* target = GetTarget();
+
+                if (!caster || !target)
+                    return;
+
+                // Deal damage to the player and to the other players and decrease a stack.
+                if (AuraPtr dot = target->GetAura(SPELL_STATIC_WOUND))
                 {
-                    if (GetTarget())
+                    int32 stacks = dot->GetStackAmount();
+
+                    // Tank damage.
+                    const SpellInfo* woundSpell = sSpellMgr->GetSpellInfo(SPELL_STATIC_WOUND, caster->GetMap()->GetDifficulty());
+                    caster->DealDamage(target, woundSpell->Effects[0].BasePoints * stacks, NULL, SPELL_DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, woundSpell);
+
+                    // All other players damage.
+                    const SpellInfo* woundAllSpell = sSpellMgr->GetSpellInfo(SPELL_STATIC_WOUND_DMG, caster->GetMap()->GetDifficulty());
+                    Map::PlayerList const &PlayerList = caster->GetMap()->GetPlayers();
+                    if (!PlayerList.isEmpty())
+                        for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                            if (Player* player = i->getSource())
+                                if (player != target->ToPlayer())
+                                    caster->DealDamage(player, (woundSpell->Effects[0].BasePoints + 1000) / 3, NULL, SPELL_DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, woundAllSpell);
+
+                    // Stack handling.
+                    if (stacks > 1)
+                        dot->SetStackAmount(stacks - 1);
+                    else
+                        target->RemoveAurasDueToSpell(SPELL_STATIC_WOUND);
+                }
+            }
+
+            void Register()
+            {
+                OnEffectPeriodic += AuraEffectPeriodicFn(spell_static_wound_AuraScript::OnPeriodic, EFFECT_1, SPELL_AURA_PERIODIC_DUMMY);
+            }
+        };
+
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_static_wound_AuraScript();
+        }
+};
+
+// Focus Lightning (main cast spell) - 137399.
+class spell_focused_lightning : public SpellScriptLoader
+{
+    public:
+        spell_focused_lightning() : SpellScriptLoader("spell_focused_lightning") { }
+
+        class spell_focused_lightning_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_focused_lightning_SpellScript);
+
+            void HandleDummy(SpellEffIndex /*effIndex*/)
+            {
+                Unit* caster = GetCaster();
+
+                if (!caster)
+                    return;
+
+                caster->SummonCreature(NPC_FOCUSED_LIGHTNING, caster->GetPositionX() + 5.0f, caster->GetPositionY(), caster->GetPositionZ(), 0, TEMPSUMMON_MANUAL_DESPAWN);
+            }
+
+            void Register()
+            {
+                OnEffectHitTarget += SpellEffectFn(spell_focused_lightning_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_focused_lightning_SpellScript();
+        }
+};
+
+// Lightning Storm (Heroic dummy damage) - 140819
+class spell_lightning_storm_heroic_dummy : public SpellScriptLoader
+{
+    public:
+        spell_lightning_storm_heroic_dummy() : SpellScriptLoader("spell_lightning_storm_heroic_dummy") { }
+
+        class spell_lightning_storm_heroic_dummy_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_lightning_storm_heroic_dummy_SpellScript);
+
+            void HandleDummy(SpellEffIndex /*effIndex*/)
+            {
+                Unit* target = GetHitUnit();
+
+                if (!target)
+                    return;
+
+                Unit* caster = target->FindNearestCreature(BOSS_JINROKH_BREAKER, 200.0f, true) ? target->FindNearestCreature(BOSS_JINROKH_BREAKER, 200.0f, true)->ToUnit() : NULL;
+
+                if (!caster)
+                    return;
+
+                caster->CastSpell(caster, SPELL_LIGHTNING_STRIKE_VIS, true);
+
+                // Only happens on Heroic difficulties.
+                if (!caster->GetMap()->IsHeroic())
+                    return;
+
+                if (urand(1, 4) == 1) // 25 % chance means 1 in 4 ticks and should comply with the restrictions, we don't want to kill everybody :).
+                {
+                    caster->CastSpell(target, SPELL_LIGHTNING_STORM_H_DMG, true);
+
+                    // Cast Lightning Diffusion on players in the back of the target in a line.
+                    Map::PlayerList const &PlayerList = caster->GetMap()->GetPlayers();
+                    if (!PlayerList.isEmpty())
                     {
-                        std::list<Player*> pl_list;
-
-                        GetTarget()->GetPlayerListInGrid(pl_list, 6.0f);
-
-                        if (pl_list.empty())
-                            return;
-
-                        for (auto itr : pl_list)
+                        for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                         {
-                            if (itr->isAlive())
-                                itr->EnvironmentalDamage(DAMAGE_FIRE, 45000);
+                            if (Player* player = i->getSource())
+                            {
+                                if (player->ToUnit()->isInBack(target))
+                                {
+                                    caster->CastSpell(player, SPELL_LIGHTNING_DIFFUSION, true);
+                                    break; // break the loop, the spell is chained.
+                                }
+                            }
                         }
-
-                        GetTarget()->ToPlayer()->EnvironmentalDamage(DAMAGE_FIRE, 45000);
-                        GetTarget()->CastSpell(GetTarget(), SPELL_IONIZATION_EXPLOSION);
                     }
                 }
             }
-        }
 
-        void Register()
+            void Register()
+            {
+                OnEffectHitTarget += SpellEffectFn(spell_lightning_storm_heroic_dummy_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
         {
-            AfterEffectRemove += AuraEffectRemoveFn(spell_ionization_removalAuraScript::OnRemove, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+            return new spell_lightning_storm_heroic_dummy_SpellScript();
         }
-    };
-
-    AuraScript* GetAuraScript() const
-    {
-        return new spell_ionization_removalAuraScript();
-    }
 };
 
-void AddSC_boss_jinrokh()
+// Ionization aura 138732.
+class spell_ionization : public SpellScriptLoader
 {
-    new boss_jinkorh();
-    // spells
-    new spell_cast_dot_lightning_storm();
-    new spell_remove_thunder_strike_damage();
-    new spell_ionization_removal();
-    //new spell_targets_ionization();
-    // npcs
-    new npc_corrupted_water();
-    new npc_focused_lightning_orb();
-    new npc_trigger_statue();
-    new npc_lightning_fissure();
-    new spell_lightning_storm_dot();
-    // heroic
-    new npc_lightning_strike_pillar();
-    new npc_lightning_star();
-}
+    public:
+        spell_ionization() : SpellScriptLoader("spell_ionization") { }
 
+        class spell_ionization_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_ionization_AuraScript);
+
+            void OnRemove(constAuraEffectPtr /*aurEff*/, AuraEffectHandleModes /*mode*/)
+            {
+                Unit* caster = GetCaster();
+                Unit* target = GetTarget();
+
+                if (!caster || !target)
+                    return;
+
+                caster->CastSpell(target, SPELL_IONIZATION_DMG, false);
+            }
+
+            void Register()
+            {
+                OnEffectRemove += AuraEffectRemoveFn(spell_ionization_AuraScript::OnRemove, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+            }
+        };
+
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_ionization_AuraScript();
+        }
+};
+
+class npc_throneofthunder_teleporter : public CreatureScript
+{
+    public:
+        npc_throneofthunder_teleporter() : CreatureScript("npc_throneofthunder_teleporter") { }
+
+        bool OnGossipHello(Player* player, Creature* creature)
+        {
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Exit Throne of Thunder.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+            player->SEND_GOSSIP_MENU(42915, creature->GetGUID());
+            return true;
+        }
+
+        bool OnGossipSelect(Player* player, Creature* /*creature*/, uint32 /*sender*/, uint32 action)
+        {
+            player->PlayerTalkClass->ClearMenus();
+
+            if (action == GOSSIP_ACTION_INFO_DEF + 1)
+            {
+                player->TeleportTo(1064, 7254.155f, 5025.962f, 76.164f, 2.364f);
+                player->CLOSE_GOSSIP_MENU();
+            }
+
+            return true;
+        }
+};
+
+void AddSC_boss_jin_rokh_breaker()
+{
+    new boss_jin_rokh_breaker();
+    new npc_mogu_statue_trigger();
+    new npc_conductive_water();
+    new npc_focused_lightning();
+    new npc_lightning_fissure();
+    new spell_thundering_throw();
+    new spell_thundering_throw_grab();
+    new spell_thundering_throw_aoe();
+    new spell_static_burst();
+    new spell_static_wound();
+    new spell_focused_lightning();
+    new spell_lightning_storm_heroic_dummy();
+    new spell_ionization();
+	new npc_throneofthunder_teleporter();
+}

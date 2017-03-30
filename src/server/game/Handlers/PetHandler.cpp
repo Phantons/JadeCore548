@@ -51,7 +51,7 @@ void WorldSession::HandleDismissCritter(WorldPacket& recvData)
 
     if (_player->GetCritterGUID() == pet->GetGUID())
     {
-         if (pet->GetTypeId() == TYPEID_UNIT && pet->ToCreature()->isSummon())
+         if (pet->GetTypeId() == TYPEID_UNIT && pet->ToCreature()->IsSummon())
              pet->ToTempSummon()->UnSummon();
     }
 }
